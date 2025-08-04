@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flamez - Dynamic Rebuttal Bot</title>
+    <title>Flamez - Rhyming Rebuttal Bot</title>
     <style>
         /* --- CSS is unchanged --- */
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
@@ -18,7 +18,7 @@
         html, body { height: 100%; background-color: var(--background-color); color: var(--text-primary); font-family: 'Roboto', sans-serif; }
         .app-container { display: flex; flex-direction: column; height: 100%; max-width: 800px; margin: 0 auto; background-color: var(--surface-color); }
         header { padding: 15px 20px; background-color: #0d0d0d; border-bottom: 2px solid var(--primary-color); text-align: center; flex-shrink: 0; }
-        header h1 { font-family: 'Bebas Neue', cursive; font-size: 3rem; letter-spacing: 3px; color: var(--text-primary); text-shadow: 0 0 5px #fff, 0 0 10px var(--secondary-color), 0 0 20px var(--primary-color); }
+        header h1 { font-family: 'Bebas+Neue', cursive; font-size: 3rem; letter-spacing: 3px; color: var(--text-primary); text-shadow: 0 0 5px #fff, 0 0 10px var(--secondary-color), 0 0 20px var(--primary-color); }
         header p { color: var(--text-secondary); font-size: 0.9rem; }
         .chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
         .message { max-width: 85%; padding: 12px 18px; border-radius: 20px; line-height: 1.5; word-wrap: break-word; opacity: 0; transform: translateY(20px); animation: fadeIn 0.5s forwards; }
@@ -64,22 +64,36 @@
         const typingIndicator = document.getElementById('typingIndicator');
         const slashBtn = document.getElementById('slashBtn');
         
-        // --- NEW: Combinatorial Rebuttal Engine ---
+        // --- NEW: Rhyming Couplet Rebuttal Engine ---
 
-        const rebuttalComponents = {
-            openers: [ "You keep talking 'bout", "I'm tired of hearing about", "Your whole style is built on", "Don't you have anything else besides", "Another weak bar about", "Let me break down your obsession with" ],
-            subjects: [ "your so-called '[KEYWORD]'", "that tired old '[KEYWORD]' line", "your imaginary '[KEYWORD]'", "all that fake '[KEYWORD]' talk", "the predictable '[KEYWORD]' scheme", "your laughable '[KEYWORD]' story" ],
-            punchlines: [ "but your delivery has no soul.", "while I'm over here changing the game.", "which frankly everyone is tired of.", "and it's clear you have nothing else to say.", "it's obvious you're just a cheap imitation.", "so I'm here to put an end to the fantasy." ]
-        };
+        const rebuttalCouplets = [
+            { id: 1, bar1: "You call your [KEYWORD] a punchline? It's more like a light tap,", bar2: "I'm the earthquake that's wiping your name off the map." },
+            { id: 2, bar1: "You think your [KEYWORD] is clever, you think that you're so deep,", bar2: "But your bars are so boring they're putting the crowd to sleep." },
+            { id: 3, bar1: "All that bragging about your [KEYWORD] is getting incredibly stale,", bar2: "My rhymes are a hurricane, yours are a gentle gale." },
+            { id: 4, bar1: "You're hyping up your [KEYWORD] like it's some kind of epic art,", bar2: "But I'll dismantle your ego and tear your whole argument apart." },
+            { id: 5, bar1: "You say you're a king with your [KEYWORD], but your crown is just a fake,", bar2: "I'm the certified champ, winning for goodness sake." },
+            { id: 6, bar1: "That line about your [KEYWORD] was a shot in the dark,", bar2: "My flow is a wildfire, I'm leaving a permanent mark." },
+            { id: 7, bar1: "You're talking about [KEYWORD] like you're some kind of a pro,", bar2: "But your style is outdated, it was cool a decade ago." },
+            { id: 8, bar1: "You built your whole career on that one single [KEYWORD] theme,", bar2: "I'm living the reality while you're stuck inside a dream." },
+            { id: 9, bar1: "Was that [KEYWORD] bar supposed to be some kind of threat?", bar2: "It's the weakest attempt that I've ever heard yet." },
+            { id: 10, bar1: "You're repeating your [KEYWORD] point, it's a predictable plot,", bar2: "While I'm hitting you with punchlines that you totally forgot." }
+        ];
+
+        // A list of single, hard-hitting ender bars for odd bar counts.
+        const enderBars = [
+            "Just pack it up, this battle is done.",
+            "So take a seat, the lesson's over now.",
+            "Game, set, match, you can't recover from that.",
+            "And that's the final nail in your coffin."
+        ];
 
         const stopWords = ['a', 'an', 'the', 'is', 'am', 'are', 'was', 'were', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'and', 'but', 'or', 'so', 'if', 'then', 'in', 'on', 'at', 'to', 'for', 'with', 'of', 'from', 'like'];
 
-        // --- NEW: Session-wide memory to prevent repeats ---
-        const usedRebuttals = new Set();
+        const usedCoupletIds = new Set(); // Session memory for used couplets
 
         function generateDynamicRebuttal(userText) {
             const userBars = userText.split('/').map(bar => bar.trim()).filter(bar => bar.length > 0);
-            const barCount = userBars.length > 0 ? userBars.length : 1;
+            let barCount = userBars.length > 0 ? userBars.length : 1;
 
             let keyword = 'rhymes';
             const allWords = userText.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
@@ -89,42 +103,37 @@
             }
             
             const aiResponseBars = [];
-
-            for (let i = 0; i < barCount; i++) {
-                let newBar;
-                let attempts = 0;
+            
+            // Generate rhyming couplets
+            while (barCount >= 2) {
+                let availableCouplets = rebuttalCouplets.filter(c => !usedCoupletIds.has(c.id));
                 
-                // Try to create a unique bar, with a limit to prevent infinite loops
-                do {
-                    // Randomly select one piece from each category
-                    const opener = rebuttalComponents.openers[Math.floor(Math.random() * rebuttalComponents.openers.length)];
-                    const subject = rebuttalComponents.subjects[Math.floor(Math.random() * rebuttalComponents.subjects.length)];
-                    const punchline = rebuttalComponents.punchlines[Math.floor(Math.random() * rebuttalComponents.punchlines.length)];
-                    
-                    // Assemble the new bar
-                    newBar = `${opener} ${subject}, ${punchline}`;
+                // If we run out of unique couplets, reset the memory for this round
+                if (availableCouplets.length === 0) {
+                    usedCoupletIds.clear(); 
+                    availableCouplets = rebuttalCouplets;
+                }
 
-                    attempts++;
-                } while (usedRebuttals.has(newBar) && attempts < 50); // Try up to 50 times for a unique combo
+                const chosenCouplet = availableCouplets[Math.floor(Math.random() * availableCouplets.length)];
+                usedCoupletIds.add(chosenCouplet.id);
 
-                // Add the newly created, unique bar to our session memory
-                usedRebuttals.add(newBar);
+                aiResponseBars.push(chosenCouplet.bar1.replace(/\[KEYWORD\]/g, keyword));
+                aiResponseBars.push(chosenCouplet.bar2.replace(/\[KEYWORD\]/g, keyword));
+                
+                barCount -= 2;
+            }
 
-                // Replace the keyword and add it to the final response
-                const finalBar = newBar.replace(/\[KEYWORD\]/g, keyword);
-                aiResponseBars.push(finalBar);
+            // If there's one bar left to fill, add a random ender
+            if (barCount === 1) {
+                const ender = enderBars[Math.floor(Math.random() * enderBars.length)];
+                aiResponseBars.push(ender);
             }
 
             return aiResponseBars.join(' / ');
         }
         
-        // --- Event Listeners and Display Logic (Largely Unchanged) ---
-        slashBtn.addEventListener('click', (event) => {
-            event.preventDefault();
-            userInput.value += ' / ';
-            userInput.focus();
-        });
-
+        // --- Event Listeners and Display Logic (Unchanged) ---
+        slashBtn.addEventListener('click', (event) => { event.preventDefault(); userInput.value += ' / '; userInput.focus(); });
         chatForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const userMessageText = userInput.value.trim();
