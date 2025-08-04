@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flamez - Dynamic Rebuttal Bot</title>
+    <style>
+        /* --- CSS is unchanged --- */
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
+        :root {
+            --background-color: #111111; --surface-color: #1a1a1a;
+            --primary-color: #FF4500; --secondary-color: #ff8c00;
+            --text-primary: #ffffff; --text-secondary: #b3b3b3;
+            --user-bubble: #005fff; --ai-bubble: #333333;
+            --slash-button-bg: #444444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; background-color: var(--background-color); color: var(--text-primary); font-family: 'Roboto', sans-serif; }
+        .app-container { display: flex; flex-direction: column; height: 100%; max-width: 800px; margin: 0 auto; background-color: var(--surface-color); }
+        header { padding: 15px 20px; background-color: #0d0d0d; border-bottom: 2px solid var(--primary-color); text-align: center; flex-shrink: 0; }
+        header h1 { font-family: 'Bebas Neue', cursive; font-size: 3rem; letter-spacing: 3px; color: var(--text-primary); text-shadow: 0 0 5px #fff, 0 0 10px var(--secondary-color), 0 0 20px var(--primary-color); }
+        header p { color: var(--text-secondary); font-size: 0.9rem; }
+        .chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        .message { max-width: 85%; padding: 12px 18px; border-radius: 20px; line-height: 1.5; word-wrap: break-word; opacity: 0; transform: translateY(20px); animation: fadeIn 0.5s forwards; }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        .user-message { background-color: var(--user-bubble); color: var(--text-primary); align-self: flex-end; border-bottom-right-radius: 5px; }
+        .ai-message { background-color: var(--ai-bubble); color: var(--text-primary); align-self: flex-start; border-bottom-left-radius: 5px; }
+        .ai-message.welcome-message { background: none; border: 1px dashed var(--text-secondary); color: var(--text-secondary); text-align: center; align-self: center; max-width: 90%; }
+        .typing-indicator { display: none; align-self: flex-start; padding: 12px 18px; }
+        .typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        .chat-form { display: flex; align-items: center; padding: 15px; background-color: #0d0d0d; border-top: 1px solid #333; flex-shrink: 0; gap: 10px; }
+        #userInput { flex-grow: 1; padding: 12px 15px; border: 1px solid #444; border-radius: 25px; background-color: #2a2a2a; color: var(--text-primary); font-size: 1rem; outline: none; transition: border-color 0.3s; }
+        #userInput:focus { border-color: var(--primary-color); }
+        #slashBtn { width: 50px; height: 50px; border: none; border-radius: 50%; background-color: var(--slash-button-bg); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.3s, transform 0.2s; flex-shrink: 0; font-size: 1.5rem; font-weight: bold; }
+        #slashBtn:hover { background-color: #555555; }
+        #slashBtn:active { transform: scale(0.9); }
+        #sendBtn { width: 50px; height: 50px; border: none; border-radius: 50%; background-color: var(--primary-color); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.3s, transform 0.2s; flex-shrink: 0; }
+        #sendBtn:hover { background-color: var(--secondary-color); }
+        #sendBtn:active { transform: scale(0.9); }
+        #sendBtn svg { width: 24px; height: 24px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header><h1>Flamez</h1><p>Spit Fire. Get Burned.</p></header>
+        <main class="chat-window" id="chatWindow">
+            <div class="message ai-message welcome-message">This is a dynamic rebuttal bot. To get the best response, write your rap and put a <strong>/</strong> after each bar to mark the count. I'll match your length and use your own words against you.</div>
+             <div class="typing-indicator" id="typingIndicator"><span></span><span></span><span></span></div>
+        </main>
+        <form class="chat-form" id="chatForm">
+            <input type="text" id="userInput" placeholder="My flow is fire / I'm the king..." autocomplete="off" required>
+            <button type="button" id="slashBtn" aria-label="Add bar separator">/</button>
+            <button type="submit" id="sendBtn" aria-label="Send message"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+        </form>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const chatWindow = document.getElementById('chatWindow');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const slashBtn = document.getElementById('slashBtn');
+        
+        // --- NEW: Combinatorial Rebuttal Engine ---
+
+        const rebuttalComponents = {
+            openers: [ "You keep talking 'bout", "I'm tired of hearing about", "Your whole style is built on", "Don't you have anything else besides", "Another weak bar about", "Let me break down your obsession with" ],
+            subjects: [ "your so-called '[KEYWORD]'", "that tired old '[KEYWORD]' line", "your imaginary '[KEYWORD]'", "all that fake '[KEYWORD]' talk", "the predictable '[KEYWORD]' scheme", "your laughable '[KEYWORD]' story" ],
+            punchlines: [ "but your delivery has no soul.", "while I'm over here changing the game.", "which frankly everyone is tired of.", "and it's clear you have nothing else to say.", "it's obvious you're just a cheap imitation.", "so I'm here to put an end to the fantasy." ]
+        };
+
+        const stopWords = ['a', 'an', 'the', 'is', 'am', 'are', 'was', 'were', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'and', 'but', 'or', 'so', 'if', 'then', 'in', 'on', 'at', 'to', 'for', 'with', 'of', 'from', 'like'];
+
+        // --- NEW: Session-wide memory to prevent repeats ---
+        const usedRebuttals = new Set();
+
+        function generateDynamicRebuttal(userText) {
+            const userBars = userText.split('/').map(bar => bar.trim()).filter(bar => bar.length > 0);
+            const barCount = userBars.length > 0 ? userBars.length : 1;
+
+            let keyword = 'rhymes';
+            const allWords = userText.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+            const significantWords = allWords.filter(word => !stopWords.includes(word) && word.length > 3);
+            if (significantWords.length > 0) {
+                keyword = significantWords[Math.floor(Math.random() * significantWords.length)];
+            }
+            
+            const aiResponseBars = [];
+
+            for (let i = 0; i < barCount; i++) {
+                let newBar;
+                let attempts = 0;
+                
+                // Try to create a unique bar, with a limit to prevent infinite loops
+                do {
+                    // Randomly select one piece from each category
+                    const opener = rebuttalComponents.openers[Math.floor(Math.random() * rebuttalComponents.openers.length)];
+                    const subject = rebuttalComponents.subjects[Math.floor(Math.random() * rebuttalComponents.subjects.length)];
+                    const punchline = rebuttalComponents.punchlines[Math.floor(Math.random() * rebuttalComponents.punchlines.length)];
+                    
+                    // Assemble the new bar
+                    newBar = `${opener} ${subject}, ${punchline}`;
+
+                    attempts++;
+                } while (usedRebuttals.has(newBar) && attempts < 50); // Try up to 50 times for a unique combo
+
+                // Add the newly created, unique bar to our session memory
+                usedRebuttals.add(newBar);
+
+                // Replace the keyword and add it to the final response
+                const finalBar = newBar.replace(/\[KEYWORD\]/g, keyword);
+                aiResponseBars.push(finalBar);
+            }
+
+            return aiResponseBars.join(' / ');
+        }
+        
+        // --- Event Listeners and Display Logic (Largely Unchanged) ---
+        slashBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            userInput.value += ' / ';
+            userInput.focus();
+        });
+
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userMessageText = userInput.value.trim();
+            if (userMessageText === '') return;
+            displayMessage(userMessageText, 'user');
+            userInput.value = '';
+            typingIndicator.style.display = 'flex';
+            scrollToBottom();
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const aiResponseText = generateDynamicRebuttal(userMessageText);
+            typingIndicator.style.display = 'none';
+            displayMessage(aiResponseText, 'ai');
+        });
+        function displayMessage(text, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', `${sender}-message`);
+            messageElement.innerHTML = text.replace(/\//g, '<br>');
+            chatWindow.insertBefore(messageElement, typingIndicator);
+            scrollToBottom();
+        }
+        function scrollToBottom() { chatWindow.scrollTop = chatWindow.scrollHeight; }
+    </script>
+</body>
+</html>
