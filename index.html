@@ -5,55 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flamez - Rhyming Rebuttal Bot</title>
     <style>
-        /* --- CSS is unchanged --- */
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
+        
         :root {
             --background-color: #111111; --surface-color: #1a1a1a;
             --primary-color: #FF4500; --secondary-color: #ff8c00;
             --text-primary: #ffffff; --text-secondary: #b3b3b3;
-            --user-bubble: #005fff; --ai-bubble: #333333;
-            --slash-button-bg: #444444;
+            --user-bubble: #0096C7; --ai-bubble: #444444;
+            --fire-gradient: linear-gradient(135deg, #FFEB3B, #FFC107, #FF9800, #F44336);
+            --blue-flame-gradient: linear-gradient(135deg, #0077b6, #00b4d8, #90e0ef, #caf0f8);
+            --text-outline: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; background-color: var(--background-color); color: var(--text-primary); font-family: 'Roboto', sans-serif; }
         .app-container { display: flex; flex-direction: column; height: 100%; max-width: 800px; margin: 0 auto; background-color: var(--surface-color); }
         header { padding: 15px 20px; background-color: #0d0d0d; border-bottom: 2px solid var(--primary-color); text-align: center; flex-shrink: 0; }
-        header h1 { font-family: 'Bebas+Neue', cursive; font-size: 3rem; letter-spacing: 3px; color: var(--text-primary); text-shadow: 0 0 5px #fff, 0 0 10px var(--secondary-color), 0 0 20px var(--primary-color); }
+        header h1 { font-family: 'Bebas Neue', cursive; font-size: 3rem; letter-spacing: 3px; color: var(--text-primary); text-shadow: var(--text-outline), 0 0 5px #fff, 0 0 10px var(--secondary-color), 0 0 20px var(--primary-color); }
         header p { color: var(--text-secondary); font-size: 0.9rem; }
         .chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
-        .message { max-width: 85%; padding: 12px 18px; border-radius: 20px; line-height: 1.5; word-wrap: break-word; opacity: 0; transform: translateY(20px); animation: fadeIn 0.5s forwards; }
+        .message { max-width: 85%; padding: 12px 18px; border-radius: 20px; line-height: 1.5; word-wrap: break-word; opacity: 0; transform: translateY(20px); animation: fadeIn 0.5s forwards; position: relative; overflow: hidden; box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5); text-shadow: var(--text-outline); }
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        .message::after { content: ''; position: absolute; width: 150px; height: 150px; pointer-events: none; }
         .user-message { background-color: var(--user-bubble); color: var(--text-primary); align-self: flex-end; border-bottom-right-radius: 5px; }
         .ai-message { background-color: var(--ai-bubble); color: var(--text-primary); align-self: flex-start; border-bottom-left-radius: 5px; }
-        .ai-message.welcome-message { background: none; border: 1px dashed var(--text-secondary); color: var(--text-secondary); text-align: center; align-self: center; max-width: 90%; }
+        .ai-message::after { bottom: 0; left: 0; background: radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.2), transparent 80%); }
+        .user-message::after { bottom: 0; right: 0; background: radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.2), transparent 80%); }
+        .ai-message.welcome-message { background: none; border: 1px dashed var(--text-secondary); padding: 15px; box-shadow: none; text-shadow: none; text-align: center; align-self: center; color: rgba(255, 255, 255, 0.7); max-width: 80%; border-radius: 999px; }
+        .ai-message.welcome-message::after { display: none; }
         .typing-indicator { display: none; align-self: flex-start; padding: 12px 18px; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
         .typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
         .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
         .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
         .chat-form { display: flex; align-items: center; padding: 15px; background-color: #0d0d0d; border-top: 1px solid #333; flex-shrink: 0; gap: 10px; }
-        #userInput { flex-grow: 1; padding: 12px 15px; border: 1px solid #444; border-radius: 25px; background-color: #2a2a2a; color: var(--text-primary); font-size: 1rem; outline: none; transition: border-color 0.3s; }
-        #userInput:focus { border-color: var(--primary-color); }
-        #slashBtn { width: 50px; height: 50px; border: none; border-radius: 50%; background-color: var(--slash-button-bg); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.3s, transform 0.2s; flex-shrink: 0; font-size: 1.5rem; font-weight: bold; }
-        #slashBtn:hover { background-color: #555555; }
-        #slashBtn:active { transform: scale(0.9); }
-        #sendBtn { width: 50px; height: 50px; border: none; border-radius: 50%; background-color: var(--primary-color); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.3s, transform 0.2s; flex-shrink: 0; }
-        #sendBtn:hover { background-color: var(--secondary-color); }
-        #sendBtn:active { transform: scale(0.9); }
-        #sendBtn svg { width: 24px; height: 24px; }
+        
+        .input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            border-radius: 25px;
+            padding: 2px;
+            overflow: hidden;
+            background: linear-gradient(90deg, #ffffff, #90e0ef, #FFEB3B, #ff8c00, #FF4500, #ff8c00, #FFEB3B, #90e0ef, #ffffff);
+            background-size: 400% 100%;
+            animation: slide 8s linear infinite;
+        }
+
+        @keyframes slide { to { background-position: -400% 0; } }
+
+        .input-wrapper::after {
+            content: ''; position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; border-radius: 25px;
+            background: 
+                conic-gradient(from 20deg, transparent, white 2deg, transparent 3deg),
+                conic-gradient(from 85deg, transparent, white 1deg, transparent 2deg),
+                conic-gradient(from 190deg, transparent, white 2deg, transparent 3deg),
+                conic-gradient(from 290deg, transparent, white 1deg, transparent 2deg);
+            opacity: 0; pointer-events: none;
+        }
+        
+        .input-wrapper.crackle-effect::after {
+            animation: crackle 0.3s ease-out;
+        }
+
+        @keyframes crackle {
+            0% { opacity: 0; transform: scale(1) rotate(0deg); }
+            20% { opacity: 0.3; transform: scale(1.5) rotate(5deg); }
+            80% { opacity: 0.2; transform: scale(1.5) rotate(-5deg); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+
+        #userInput {
+            width: 100%; height: 100%; padding: 10px 15px;
+            border-radius: 23px; border: none;
+            background-color: #2a2a2a; color: var(--text-primary);
+            font-size: 1rem; outline: none;
+            position: relative; z-index: 2;
+        }
+
+        /* --- UPDATED: Button Clickability Fix --- */
+        #slashBtn {
+            width: 50px; height: 50px; border: none; border-radius: 50%; color: white;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.1s ease-out, transform 0.1s ease-out, box-shadow 0.1s ease-out; flex-shrink: 0;
+            font-size: 1.5rem; font-weight: bold;
+            background: var(--blue-flame-gradient); box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6);
+            text-shadow: var(--text-outline);
+            position: relative; z-index: 2; /* Ensures it's on top */
+        }
+        #slashBtn:hover { filter: brightness(1.2); }
+        #slashBtn:active { background: var(--fire-gradient); transform: scale(0.9); filter: brightness(1); box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.6); }
+        
+        #sendBtn {
+            width: 50px; height: 50px; border: none; border-radius: 50%; color: white;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.1s ease-out, transform 0.1s ease-out, box-shadow 0.1s ease-out; flex-shrink: 0;
+            background: var(--fire-gradient); box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6);
+            position: relative; z-index: 2; /* Ensures it's on top */
+        }
+        #sendBtn:hover { filter: brightness(1.2); }
+        #sendBtn:active { background: var(--blue-flame-gradient); transform: scale(0.9); filter: brightness(1); box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.6); }
+        #sendBtn svg { width: 24px; height: 24px; filter: drop-shadow(-0.5px -0.5px 0 #000) drop-shadow(0.5px -0.5px 0 #000) drop-shadow(-0.5px 0.5px 0 #000) drop-shadow(0.5px 0.5px 0 #000); }
     </style>
 </head>
 <body>
     <div class="app-container">
         <header><h1>Flamez</h1><p>Spit Fire. Get Burned.</p></header>
         <main class="chat-window" id="chatWindow">
-            <div class="message ai-message welcome-message">This is a dynamic rebuttal bot. To get the best response, write your rap and put a <strong>/</strong> after each bar to mark the count. I'll match your length and use your own words against you.</div>
+            <div class="message ai-message welcome-message">
+                To mark the end of a bar, use the <strong>/</strong> button, press <strong>Enter</strong>, or end the line with a period <strong>.</strong>
+            </div>
              <div class="typing-indicator" id="typingIndicator"><span></span><span></span><span></span></div>
         </main>
         <form class="chat-form" id="chatForm">
-            <input type="text" id="userInput" placeholder="My flow is fire / I'm the king..." autocomplete="off" required>
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="My flow is fire..." autocomplete="off" required>
+            </div>
             <button type="button" id="slashBtn" aria-label="Add bar separator">/</button>
-            <button type="submit" id="sendBtn" aria-label="Send message"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+            <button type="submit" id="sendBtn" aria-label="Send message"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24" 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
         </form>
     </div>
 
@@ -63,76 +131,49 @@
         const chatWindow = document.getElementById('chatWindow');
         const typingIndicator = document.getElementById('typingIndicator');
         const slashBtn = document.getElementById('slashBtn');
-        
-        // --- NEW: Rhyming Couplet Rebuttal Engine ---
+        const inputWrapper = document.querySelector('.input-wrapper');
 
-        const rebuttalCouplets = [
-            { id: 1, bar1: "You call your [KEYWORD] a punchline? It's more like a light tap,", bar2: "I'm the earthquake that's wiping your name off the map." },
-            { id: 2, bar1: "You think your [KEYWORD] is clever, you think that you're so deep,", bar2: "But your bars are so boring they're putting the crowd to sleep." },
-            { id: 3, bar1: "All that bragging about your [KEYWORD] is getting incredibly stale,", bar2: "My rhymes are a hurricane, yours are a gentle gale." },
-            { id: 4, bar1: "You're hyping up your [KEYWORD] like it's some kind of epic art,", bar2: "But I'll dismantle your ego and tear your whole argument apart." },
-            { id: 5, bar1: "You say you're a king with your [KEYWORD], but your crown is just a fake,", bar2: "I'm the certified champ, winning for goodness sake." },
-            { id: 6, bar1: "That line about your [KEYWORD] was a shot in the dark,", bar2: "My flow is a wildfire, I'm leaving a permanent mark." },
-            { id: 7, bar1: "You're talking about [KEYWORD] like you're some kind of a pro,", bar2: "But your style is outdated, it was cool a decade ago." },
-            { id: 8, bar1: "You built your whole career on that one single [KEYWORD] theme,", bar2: "I'm living the reality while you're stuck inside a dream." },
-            { id: 9, bar1: "Was that [KEYWORD] bar supposed to be some kind of threat?", bar2: "It's the weakest attempt that I've ever heard yet." },
-            { id: 10, bar1: "You're repeating your [KEYWORD] point, it's a predictable plot,", bar2: "While I'm hitting you with punchlines that you totally forgot." }
-        ];
+        // --- UPDATED: More robust JavaScript logic for the crackle effect ---
+        userInput.addEventListener('focus', () => {
+            // Add the class to trigger the animation.
+            // This works reliably every time now.
+            inputWrapper.classList.add('crackle-effect');
+        });
 
-        // A list of single, hard-hitting ender bars for odd bar counts.
-        const enderBars = [
-            "Just pack it up, this battle is done.",
-            "So take a seat, the lesson's over now.",
-            "Game, set, match, you can't recover from that.",
-            "And that's the final nail in your coffin."
-        ];
+        // Add an event listener to the wrapper that waits for the animation to end.
+        // This is the cleanest way to reset the effect for the next click.
+        inputWrapper.addEventListener('animationend', () => {
+            inputWrapper.classList.remove('crackle-effect');
+        });
 
+
+        const rebuttalCouplets = [ { id: 1, bar1: "You call your [KEYWORD] a punchline? It's more like a light tap,", bar2: "I'm the earthquake that's wiping your name off the map." }, { id: 2, bar1: "You think your [KEYWORD] is clever, you think that you're so deep,", bar2: "But your bars are so boring they're putting the crowd to sleep." }, { id: 3, bar1: "All that bragging about your [KEYWORD] is getting incredibly stale,", bar2: "My rhymes are a hurricane, yours are a gentle gale." }, { id: 4, bar1: "You're hyping up your [KEYWORD] like it's some kind of epic art,", bar2: "But I'll dismantle your ego and tear your whole argument apart." }, { id: 5, bar1: "You say you're a king with your [KEYWORD], but your crown is just a fake,", bar2: "I'm the certified champ, winning for goodness sake." }, { id: 6, bar1: "That line about your [KEYWORD] was a shot in the dark,", bar2: "My flow is a wildfire, I'm leaving a permanent mark." }, { id: 7, bar1: "You're talking about [KEYWORD] like you're some kind of a pro,", bar2: "But your style is outdated, it was cool a decade ago." }, { id: 8, bar1: "You built your whole career on that one single [KEYWORD] theme,", bar2: "I'm living the reality while you're stuck inside a dream." }, { id: 9, bar1: "Was that [KEYWORD] bar supposed to be some kind of threat?", bar2: "It's the weakest attempt that I've ever heard yet." }, { id: 10, bar1: "You're repeating your [KEYWORD] point, it's a predictable plot,", bar2: "While I'm hitting you with punchlines that you totally forgot." } ];
+        const enderBars = [ "Just pack it up, this battle is done.", "So take a seat, the lesson's over now.", "Game, set, match, you can't recover from that.", "And that's the final nail in your coffin." ];
         const stopWords = ['a', 'an', 'the', 'is', 'am', 'are', 'was', 'were', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'and', 'but', 'or', 'so', 'if', 'then', 'in', 'on', 'at', 'to', 'for', 'with', 'of', 'from', 'like'];
-
-        const usedCoupletIds = new Set(); // Session memory for used couplets
-
+        const usedCoupletIds = new Set();
         function generateDynamicRebuttal(userText) {
-            const userBars = userText.split('/').map(bar => bar.trim()).filter(bar => bar.length > 0);
+            const userBars = userText.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 0);
             let barCount = userBars.length > 0 ? userBars.length : 1;
-
             let keyword = 'rhymes';
             const allWords = userText.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
             const significantWords = allWords.filter(word => !stopWords.includes(word) && word.length > 3);
-            if (significantWords.length > 0) {
-                keyword = significantWords[Math.floor(Math.random() * significantWords.length)];
-            }
-            
+            if (significantWords.length > 0) { keyword = significantWords[Math.floor(Math.random() * significantWords.length)]; }
             const aiResponseBars = [];
-            
-            // Generate rhyming couplets
             while (barCount >= 2) {
                 let availableCouplets = rebuttalCouplets.filter(c => !usedCoupletIds.has(c.id));
-                
-                // If we run out of unique couplets, reset the memory for this round
-                if (availableCouplets.length === 0) {
-                    usedCoupletIds.clear(); 
-                    availableCouplets = rebuttalCouplets;
-                }
-
+                if (availableCouplets.length === 0) { usedCoupletIds.clear(); availableCouplets = rebuttalCouplets; }
                 const chosenCouplet = availableCouplets[Math.floor(Math.random() * availableCouplets.length)];
                 usedCoupletIds.add(chosenCouplet.id);
-
                 aiResponseBars.push(chosenCouplet.bar1.replace(/\[KEYWORD\]/g, keyword));
                 aiResponseBars.push(chosenCouplet.bar2.replace(/\[KEYWORD\]/g, keyword));
-                
                 barCount -= 2;
             }
-
-            // If there's one bar left to fill, add a random ender
             if (barCount === 1) {
                 const ender = enderBars[Math.floor(Math.random() * enderBars.length)];
                 aiResponseBars.push(ender);
             }
-
             return aiResponseBars.join(' / ');
         }
-        
-        // --- Event Listeners and Display Logic (Unchanged) ---
         slashBtn.addEventListener('click', (event) => { event.preventDefault(); userInput.value += ' / '; userInput.focus(); });
         chatForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -143,14 +184,21 @@
             typingIndicator.style.display = 'flex';
             scrollToBottom();
             await new Promise(resolve => setTimeout(resolve, 1500));
-            const aiResponseText = generateDynamicRebuttal(userMessageText);
             typingIndicator.style.display = 'none';
-            displayMessage(aiResponseText, 'ai');
+            const hasNoDelimiters = !/[./\n]/.test(userMessageText);
+            const isLongEnoughToWarrantCheck = userMessageText.length > 35;
+            if (isLongEnoughToWarrantCheck && hasNoDelimiters) {
+                const instructionMessage = "Hold up. To match your bars, I need the count. Use the / button, a period, or press Enter after each rhyme so I can fire back properly.";
+                displayMessage(instructionMessage, 'ai');
+            } else {
+                const aiResponseText = generateDynamicRebuttal(userMessageText);
+                displayMessage(aiResponseText, 'ai');
+            }
         });
         function displayMessage(text, sender) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', `${sender}-message`);
-            messageElement.innerHTML = text.replace(/\//g, '<br>');
+            messageElement.innerHTML = text.replace(/[./\n]/g, '<br>').replace(/\//g, '<br>');
             chatWindow.insertBefore(messageElement, typingIndicator);
             scrollToBottom();
         }
