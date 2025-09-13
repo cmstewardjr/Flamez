@@ -101,19 +101,21 @@
         }
         .app-container > .video-background { z-index: 0; opacity: 0.2; }
 
-        header {
-    flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-end; /* CHANGED THIS LINE */
+/* --- PASTE THIS ENTIRE BLOCK TO FIX THE HEADER ALIGNMENT --- */
+header {
+    flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-end; /* EDITED */
     padding: 0 15px; background-color: #0d0d0d; border-bottom: 2px solid var(--primary-color);
     position: relative; z-index: 2; box-shadow: 0px 4px 15px -3px var(--primary-color);
 }
-        .header-logo-container { flex-grow: 1; text-align: center; align-self: center; } /* ADDED THIS */
-        .header-logo { height: 120px; vertical-align: middle; }
-        .header-controls { display: flex; align-items: center; gap: 15px; flex-shrink: 0; padding-bottom: 10px; } /* ADDED PADDING */
-        .header-controls.left-controls { justify-content: flex-start; }
+.header-logo-container { flex-grow: 1; text-align: center; align-self: center; } /* EDITED */
+.header-logo { height: 120px; vertical-align: middle; }
+.header-controls { display: flex; align-items: center; gap: 15px; flex-shrink: 0; padding-bottom: 10px; } /* EDITED */
+.header-controls.left-controls { justify-content: flex-start; }
 /* THIS IS THE NEW, CORRECTED CSS FOR THE RIGHT-SIDE ICONS */
 .header-controls.right-controls {
     display: flex;
-    align-items: center; /* This vertically aligns everything on the same level */
+    /* We align items within this container to the bottom to ensure the stack and the button line up */
+    align-items: flex-end; 
     gap: 15px; /* Adjust this to change space between "New Chat" and the stack */
 }
     .right-stack {
