@@ -176,10 +176,35 @@ header {
         .dots-container { display: flex; align-items: center; justify-content: center; background-color: var(--ai-bubble); border-radius: 20px; padding: 12px 18px; height: 1.5em;}
         .dots-container span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
         .dots-container span:nth-child(1) { animation-delay: -0.32s; } .dots-container span:nth-child(2) { animation-delay: -0.16s; }
-        .chat-form { flex-shrink: 0; display: flex; align-items: center; padding: 15px; background-color: #0d0d0d; border-top: 1px solid #333; gap: 10px; position: relative; z-index: 2; }
+        .chat-form { flex-shrink: 0; display: flex; align-items: flex-end; padding: 15px; background-color: #0d0d0d; border-top: 1px solid #333; gap: 10px; position: relative; z-index: 2; }
         .input-wrapper { position: relative; flex-grow: 1; border-radius: 25px; padding: 2px; overflow: hidden; background: linear-gradient(90deg, #ffffff, #90e0ef, #FFEB3B, #ff8c00, #FF4500, #ff8c00, #FFEB3B, #90e0ef, #ffffff); background-size: 400% 100%; animation: slide 8s linear infinite; }
         @keyframes slide { to { background-position: -400% 0; } }
-        #userInput { width: 100%; height: 100%; padding: 10px 15px; border-radius: 23px; border: none; background-color: #2a2a2a; color: var(--text-primary); font-size: 1rem; outline: none; position: relative; z-index: 2; }
+        #userInput { 
+    width: 100%; 
+    padding: 12px 15px;
+    border-radius: 23px; 
+    border: none; 
+    background-color: #2a2a2a; 
+    color: var(--text-primary); 
+    font-size: 1rem; 
+    outline: none; 
+    position: relative; 
+    z-index: 2;
+    resize: none;
+    line-height: 1.5;
+    
+    /* --- THESE PROPERTIES WERE EDITED --- */
+    overflow-y: auto; /* Keeps scrolling behavior enabled */
+    max-height: 72px; /* Set max height to fit exactly two lines + padding */
+    
+    /* These two rules hide the scrollbar in different browsers */
+    scrollbar-width: none;  /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
+/* This rule hides the scrollbar in Chrome, Safari, and other WebKit browsers */
+#userInput::-webkit-scrollbar {
+    display: none;
+}
         #slashBtn, #sendBtn { width: 50px; height: 50px; border: none; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s ease-out, transform 0.1s ease-out, box-shadow 0.1s ease-out; flex-shrink: 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6); position: relative; z-index: 2; overflow: hidden; }
         #slashBtn { font-size: 1.5rem; font-weight: bold; background: var(--fire-gradient); text-shadow: var(--text-outline); } #sendBtn { background: var(--blue-flame-gradient); }
         #slashBtn:hover, #sendBtn:hover { filter: brightness(1.2); } #slashBtn.button-pressed, #sendBtn.button-pressed { transform: scale(0.9); filter: brightness(1); box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.6); }
@@ -335,7 +360,7 @@ header {
         </main>
         <form class="chat-form" id="chatForm">
             <div class="input-wrapper">
-                <input type="text" id="userInput" placeholder="My flow is fire..." autocomplete="off" required>
+                <textarea id="userInput" placeholder="Type your rhymes here / make them clear..." autocomplete="off" required rows="1"></textarea>
             </div>
             <button type="button" id="slashBtn" aria-label="Add bar separator">/</button>
             <button type="submit" id="sendBtn" aria-label="Send message">
@@ -570,10 +595,30 @@ const playSound = (sound) => {
             ui.helpBtn.addEventListener('click', () => startTutorial(false));
             ui.slashBtn.addEventListener('click', (event) => { event.preventDefault(); playSound(sounds.snare); ui.userInput.value += ' / '; ui.userInput.focus(); });
             
-            const syncThemeSongIcons = () => { const isPlaying = !sounds.theme.paused; document.querySelector('#themeSongControl .play-icon').classList.toggle('hidden', isPlaying); document.querySelector('#themeSongControl .pause-icon').classList.toggle('hidden', !isPlaying); };
-            sounds.theme.addEventListener('play', syncThemeSongIcons); sounds.theme.addEventListener('pause', syncThemeSongIcons); syncThemeSongIcons();
-            ui.themeSongControl.addEventListener('click', () => { if(sounds.theme.paused) sounds.theme.play(); else sounds.theme.pause(); });
-            ui.soundToggleBtn.addEventListener('click', () => { const isMuted = !sounds.click.muted; sounds.click.muted = isMuted; sounds.snare.muted = isMuted; ui.soundOnIcon.classList.toggle('hidden', isMuted); ui.soundOffIcon.classList.toggle('hidden', !isMuted); });
+                // This makes the textarea grow automatically as you type.
+    ui.userInput.addEventListener('input', () => {
+    const target = ui.userInput;
+    
+    // Read the max-height directly from the CSS styles
+    const styles = window.getComputedStyle(target);
+    const maxHeight = parseInt(styles.maxHeight, 10);
+    
+    target.style.height = 'auto'; // Reset height to calculate new scrollHeight
+    
+    // Set a new height based on the content, but not exceeding the maxHeight
+    const newHeight = Math.min(target.scrollHeight, maxHeight); 
+    target.style.height = `${newHeight}px`;
+});
+
+    // This handles the Enter key:
+    // - Enter alone sends the message.
+    // - Shift+Enter creates a new line.
+    ui.userInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevents a new line from being added
+            ui.chatForm.requestSubmit(); // Submits the form
+        }
+    });
             
             ui.chatForm.addEventListener('submit', async (event) => {
                 event.preventDefault(); 
