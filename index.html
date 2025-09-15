@@ -121,7 +121,7 @@ header {
     height: 140px; /* <-- EDIT THIS VALUE to control the header's height directly */
     
     padding: 0 15px; 
-    background-color: #2d2d2d;
+     background: linear-gradient(to top, #2d2d2d, #0d0d0d); 
     
     border-top: 3px solid var(--user-bubble);
     position: relative; 
@@ -177,11 +177,23 @@ header {
         .dots-container span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
         .dots-container span:nth-child(1) { animation-delay: -0.32s; } .dots-container span:nth-child(2) { animation-delay: -0.16s; }
         .chat-form { flex-shrink: 0; display: flex; align-items: flex-end; padding: 15px; background-color: #0d0d0d; border-top: 1px solid #333; gap: 10px; position: relative; z-index: 2; }
-        .input-wrapper { position: relative; flex-grow: 1; border-radius: 25px; padding: 2px; overflow: hidden; background: linear-gradient(90deg, #ffffff, #90e0ef, #FFEB3B, #ff8c00, #FF4500, #ff8c00, #FFEB3B, #90e0ef, #ffffff); background-size: 400% 100%; animation: slide 8s linear infinite; }
+        /* --- EDIT 1 of 2: ADD FLEXBOX PROPERTIES --- */
+.input-wrapper { 
+    position: relative; 
+    flex-grow: 1; 
+    border-radius: 25px; 
+    padding: 2px; 
+    overflow: hidden; 
+    background: linear-gradient(90deg, #ffffff, #90e0ef, #FFEB3B, #ff8c00, #FF4500, #ff8c00, #FFEB3B, #90e0ef, #ffffff); 
+    background-size: 400% 100%; 
+    animation: slide 8s linear infinite; 
+    display: flex; /* <-- ADDED THIS */
+    align-items: center; /* <-- AND ADDED THIS */
+}
         @keyframes slide { to { background-position: -400% 0; } }
         #userInput { 
     width: 100%; 
-    padding: 12px 15px;
+    padding: 10px 15px;
     border-radius: 23px; 
     border: none; 
     background-color: #2a2a2a; 
@@ -194,7 +206,7 @@ header {
     line-height: 1.5;
     
     /* --- THESE PROPERTIES WERE EDITED --- */
-    overflow-y: auto; /* Keeps scrolling behavior enabled */
+    overflow-y: hidden; /* Keeps scrolling behavior enabled */
     max-height: 72px; /* Set max height to fit exactly two lines + padding */
     
     /* These two rules hide the scrollbar in different browsers */
@@ -360,7 +372,7 @@ header {
         </main>
         <form class="chat-form" id="chatForm">
             <div class="input-wrapper">
-                <textarea id="userInput" placeholder="Type your rhymes here / make them clear..." autocomplete="off" required rows="1"></textarea>
+                <textarea id="userInput" placeholder="Type your rhymes here / make them clear..." autocomplete="off" required rows="2"></textarea>
             </div>
             <button type="button" id="slashBtn" aria-label="Add bar separator">/</button>
             <button type="submit" id="sendBtn" aria-label="Send message">
@@ -596,17 +608,29 @@ const playSound = (sound) => {
             ui.slashBtn.addEventListener('click', (event) => { event.preventDefault(); playSound(sounds.snare); ui.userInput.value += ' / '; ui.userInput.focus(); });
             
                 // This makes the textarea grow automatically as you type.
-    ui.userInput.addEventListener('input', () => {
+    // --- THIS IS THE FINAL, IMPROVED AUTO-GROW SCRIPT ---
+
+ui.userInput.addEventListener('input', () => {
     const target = ui.userInput;
-    
-    // Read the max-height directly from the CSS styles
     const styles = window.getComputedStyle(target);
     const maxHeight = parseInt(styles.maxHeight, 10);
-    
-    target.style.height = 'auto'; // Reset height to calculate new scrollHeight
-    
-    // Set a new height based on the content, but not exceeding the maxHeight
-    const newHeight = Math.min(target.scrollHeight, maxHeight); 
+
+    // Reset height to calculate the true height of the content
+    target.style.height = 'auto';
+    const scrollHeight = target.scrollHeight;
+
+    // --- THIS IS THE NEW LOGIC ---
+    // If the content is taller than the max height, allow scrolling.
+    // Otherwise, keep it hidden so the scrollbar track never appears.
+    if (scrollHeight > maxHeight) {
+        target.style.overflowY = 'auto';
+    } else {
+        target.style.overflowY = 'hidden';
+    }
+    // --- END OF NEW LOGIC ---
+
+    // Set the new height, capped at the max height
+    const newHeight = Math.min(scrollHeight, maxHeight);
     target.style.height = `${newHeight}px`;
 });
 
