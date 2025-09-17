@@ -560,33 +560,29 @@ function initializeBattleEngine() {
         
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
     }
-    // PASTE THIS NEW, SMARTER PARSING FUNCTION OVER THE OLD ONE
+    // This is the final, corrected parser function.
 function parseLyrics(lyrics) {
     const pairs = [];
     lyrics.forEach(lyricBlock => {
-        // First, clean the block by removing any potential title like "Remix:"
+        // 1. Clean the block by removing any title like "Remix:"
         const cleanBlock = lyricBlock.replace(/^[A-Za-z\s]+:/, "");
-        // Split the entire block into individual lines
-        const lines = cleanBlock.split('\n');
-
-        // Now, iterate over each line to find explicit couplets
-        lines.forEach(line => {
-            // We ONLY care about lines that contain our couplet separator '/'
-            if (line.includes('/')) {
-                const parts = line.split('/');
-                // A valid couplet must have exactly two parts
-                if (parts.length === 2) {
-                    const line1 = parts[0].trim();
-                    const line2 = parts[1].trim();
-
-                    // Quality check: ensure both lines are substantial before adding them
-                    if (line1.length > 5 && line2.length > 5) {
-                        pairs.push([line1, line2]);
-                    }
-                }
+        
+        // 2. Normalize all separators: replace newlines with slashes so we only have one separator to deal with.
+        const normalizedBlock = cleanBlock.replace(/\n/g, '/');
+        
+        // 3. Split the entire block into a flat list of individual bars.
+        const bars = normalizedBlock.split('/').map(bar => bar.trim());
+        
+        // 4. Iterate through the bars and group them into pairs of two.
+        for (let i = 0; i < bars.length - 1; i += 2) {
+            const bar1 = bars[i];
+            const bar2 = bars[i+1];
+            
+            // 5. Quality check: ensure both bars are substantial before adding them.
+            if (bar1.length > 10 && bar2.length > 10) {
+                pairs.push([bar1, bar2]);
             }
-            // Any line without a '/' is ignored, preventing bad pairs.
-        });
+        }
     });
     return pairs;
 }
@@ -597,50 +593,45 @@ function parseLyrics(lyrics) {
     // --- MAIN RETURN OBJECT WITH THE NEW LOGIC ---
     return {
         generateDynamicRebuttal: function (userInput, mood = "normal") {
+            // THE FIX, PART 1: Shuffle the entire arsenal before every response for variety.
+            shuffleArray(parsedLines);
+
             const userBarCount = userInput.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 0).length;
             let barsToGenerate = userBarCount <= 4 ? userBarCount * 2 : userBarCount + 4;
             barsToGenerate = Math.min(barsToGenerate, 16);
             barsToGenerate = barsToGenerate % 2 === 0 ? barsToGenerate : barsToGenerate + 1;
-            let pairsToGenerate = barsToGenerate / 2;
+            let pairsToGenerate = Math.floor(barsToGenerate / 2);
 
             if (parsedLines.length < pairsToGenerate) return "I have spit every bar in my arsenal... you ran me dry. You got lucky this time.";
 
-            // --- NEW: KEYWORD EXTRACTION LOGIC ---
             let keyword = null;
-            // List of common words to ignore so we can find the interesting ones.
             const stopWords = new Set(['i','me','my','myself','we','our','ourselves','you','your','yourself','he','him','his','she','her','it','its','they','them','their','what','which','who','whom','this','that','am','is','are','was','were','be','been','being','have','has','had','do','does','did','a','an','the','and','but','if','or','because','as','of','at','by','for','with','about','to','from','in','out','on','off','so','then','too','very','can','will','just','not']);
             
-            // Clean the user's input and find potential keywords
             const potentialKeywords = userInput.toLowerCase()
-                .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "") // remove punctuation
-                .split(/\s+/) // split into words
-                .filter(word => word.length > 3 && !stopWords.has(word)); // filter out short/common words
+                .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+                .split(/\s+/)
+                .filter(word => word.length > 3 && !stopWords.has(word));
 
             if (potentialKeywords.length > 0) {
-                // Pick a random, interesting word from the user's verse
                 keyword = potentialKeywords[Math.floor(Math.random() * potentialKeywords.length)];
             }
             
             let rebuttalPair = null;
-            // High chance to generate a rebuttal if a good keyword was found
             if (keyword && Math.random() < 0.8) { 
                 const template = getRandomItem(rebuttalTemplates);
-                // Create the new rebuttal by filling in the template
                 rebuttalPair = [
                     template[0].replace('[keyword]', keyword),
-                    template[1] // The second line of the template doesn't need the keyword
+                    template[1]
                 ];
-                pairsToGenerate -=1; // Generate one less random pair since we're adding a custom one
+                pairsToGenerate -=1;
             }
 
-            const selectedPairs = parsedLines.splice(0, pairsToGenerate);
+            // THE FIX, PART 2: Changed .splice() to .slice(). This COPIES rhymes instead of DELETING them.
+            const selectedPairs = parsedLines.slice(0, pairsToGenerate);
             
-            // --- NEW: INJECT THE REBUTTAL ---
             if (rebuttalPair) {
-                // Add the custom rebuttal to the very beginning of the response
                 selectedPairs.unshift(rebuttalPair);
             }
-            // --- END OF NEW LOGIC ---
 
             if (selectedPairs.length > 1) {
                 const randomIndex = Math.floor(Math.random() * selectedPairs.length);
