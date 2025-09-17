@@ -541,7 +541,36 @@ function initializeBattleEngine() {
         
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
     }
-    function parseLyrics(lyrics) { const pairs = []; lyrics.forEach(lyric => { const lines = lyric.replace(/^[A-Za-z\s]+:/, "").split(/[/\n]/).map(l => l.trim()).filter(l => l.length > 10 && l.split(" ").length > 3); for (let i = 0; i < lines.length - 1; i += 2) { pairs.push([lines[i], lines[i + 1]]); } }); return pairs; }
+    // PASTE THIS NEW, SMARTER PARSING FUNCTION OVER THE OLD ONE
+function parseLyrics(lyrics) {
+    const pairs = [];
+    lyrics.forEach(lyricBlock => {
+        // First, clean the block by removing any potential title like "Remix:"
+        const cleanBlock = lyricBlock.replace(/^[A-Za-z\s]+:/, "");
+        // Split the entire block into individual lines
+        const lines = cleanBlock.split('\n');
+
+        // Now, iterate over each line to find explicit couplets
+        lines.forEach(line => {
+            // We ONLY care about lines that contain our couplet separator '/'
+            if (line.includes('/')) {
+                const parts = line.split('/');
+                // A valid couplet must have exactly two parts
+                if (parts.length === 2) {
+                    const line1 = parts[0].trim();
+                    const line2 = parts[1].trim();
+
+                    // Quality check: ensure both lines are substantial before adding them
+                    if (line1.length > 5 && line2.length > 5) {
+                        pairs.push([line1, line2]);
+                    }
+                }
+            }
+            // Any line without a '/' is ignored, preventing bad pairs.
+        });
+    });
+    return pairs;
+}
     
     parsedLines = parseLyrics(allLyrics);
     shuffleArray(parsedLines);
@@ -726,7 +755,62 @@ ui.userInput.addEventListener('input', () => {
                 setTimeout(() => { const aiReaction = analyzeUserVerse(userMessageText); if (aiReaction) addReactionToMessage(userMessageId, aiReaction); }, 500);
             });
             function displayWelcomeMessage() { const t="End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez: AI start the fight.";if(!document.querySelector(".welcome-message")){const e=document.createElement("div");e.classList.add("message-wrapper","welcome-wrapper");const a=document.createElement("div");a.classList.add("message","ai-message","welcome-message"),a.innerHTML=t,e.appendChild(a),ui.chatWindow.insertBefore(e,ui.typingIndicator)}scrollToBottom()}
-            function displayMessage(t,e,s,a=null){const i=document.createElement("div");i.id=`msg-${s}`,i.classList.add("message-wrapper",`${e}-wrapper`);const n=document.createElement("img");n.classList.add("chat-avatar"),n.src="user"===e?"ac.png":"battle-bot.png",i.appendChild(n);const d=document.createElement("div");d.classList.add("message",`${e}-message`),d.innerHTML=t.replace(/\s\/\s/g,"<br>").replace(/[.\n]/g,"<br>"),i.appendChild(d),"ai"===e&&!t.includes("Please provide")&&createReactionUI(i,s,a),"user"===e&&createReactionPlaceholder(i,s),ui.chatWindow.insertBefore(i,ui.typingIndicator),scrollToBottom()}
+            // PASTE THIS ENTIRE NEW FUNCTION OVER THE OLD ONE
+
+function displayMessage(text, sender, id, reaction = null) {
+    const messageWrapper = document.createElement("div");
+    messageWrapper.id = `msg-${id}`;
+    messageWrapper.classList.add("message-wrapper", `${sender}-wrapper`);
+
+    const avatar = document.createElement("img");
+    avatar.classList.add("chat-avatar");
+    avatar.src = sender === 'user' ? "ac.png" : "battle-bot.png";
+    messageWrapper.appendChild(avatar);
+
+    const messageEl = document.createElement("div");
+    messageEl.classList.add("message", `${sender}-message`);
+    messageWrapper.appendChild(messageEl);
+    
+    // Add the completed message wrapper to the chat window
+    ui.chatWindow.insertBefore(messageWrapper, ui.typingIndicator);
+    scrollToBottom();
+
+    if (sender === 'user') {
+        // User messages appear instantly
+        messageEl.innerHTML = text.replace(/\s\/\s/g, "<br>").replace(/[.\n]/g, "<br>");
+        createReactionPlaceholder(messageWrapper, id);
+    } else {
+        // --- NEW: Text Animation Logic for AI ---
+        // Replace slashes with a special marker that we can treat as a "word"
+        const words = text.replace(/\s\/\s/g, ' / ').split(' ');
+        let i = 0;
+
+        function animateWords() {
+            if (i < words.length) {
+                const word = words[i];
+                let delay = 120; // Delay between words in milliseconds
+
+                if (word === '/') {
+                    messageEl.innerHTML += '<br>';
+                    delay = 400; // Longer pause for end of a bar
+                } else {
+                    messageEl.innerHTML += (i > 0 && words[i-1] !== '/' ? ' ' : '') + word;
+                }
+                
+                scrollToBottom(); // Scroll with each new word
+                i++;
+                
+                setTimeout(animateWords, delay);
+            } else {
+                // Animation is complete, now add the reaction UI
+                if (!text.includes("Please provide")) {
+                    createReactionUI(messageWrapper, id, reaction);
+                }
+            }
+        }
+        animateWords(); // Start the animation
+    }
+}
             function createReactionPlaceholder(t,e){const s=document.createElement("div");s.className="reaction-container",s.id=`reaction-container-${e}`,t.appendChild(s)}
             function createReactionUI(t,e,s){const a=document.createElement("div");a.className="reaction-container";const i=document.createElement("div");i.className="reaction-capsule";const n=document.createElement("div");n.className="reaction-button";const d=document.createElement("div");d.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-3-3h6v-2H9v2zm.5-4h5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-5c-.28 0-.5.22-.5.5s.22.5.5.5z"/></svg>';const o=document.createElement("div");o.className="emoji-display",n.appendChild(d),n.appendChild(o),n.onclick=t=>{t.stopPropagation(),i.classList.toggle("expanded"),document.body.addEventListener("click",()=>i.classList.remove("expanded"),{once:!0})},["😂","🤔","😲","💀"].forEach(t=>{const s=document.createElement("span");s.textContent=t,s.onclick=a=>{a.stopPropagation(),setReaction(t,d,o,i,e),lastAiMessageMood="😂"===t?"angry":"🤔"===t?"complex":"😲"===t?"arrogant":"finish"},i.appendChild(s)}),a.appendChild(i),a.appendChild(n),t.appendChild(a),s&&setReaction(s,d,o,i,e,!1)}
             function setReaction(t,e,s,a,i,n=!0){n&&playSound(sounds.click),e.style.display="none",s.style.display="block",s.textContent=t,a.classList.remove("expanded");const d=getStorage();const o=d.currentSession.findIndex(t=>t.id===i);o>-1&&(d.currentSession[o].reaction=t,saveStorage(d))}
