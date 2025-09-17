@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flamez - Rhyming Rebuttal Bot</title>
     <style>
+
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
         
         :root {
@@ -321,6 +322,24 @@ header {
 .step-chatWindow.tutorial-arrow-left::after {
   /* This preserves vertical centering. Add your up/down nudge inside translateY(). */
   transform: translateY(calc(-50% + 0px)) !important; 
+}
+/* --- NEW CSS FOR AI BANTER --- */
+.ai-message.banter-message {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 10px var(--primary-color);
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    text-shadow: none;
+    padding: 8px 15px;
+    max-width: fit-content; /* Makes the bubble only as wide as the text */
+    align-self: flex-start;
+    margin-left: 50px; /* Aligns it with the main AI message bubble */
+}
+
+.banter-message::after {
+    display: none; /* No glossy highlight on banter */
 }
     </style>
 </head>
@@ -639,7 +658,7 @@ function parseLyrics(lyrics) {
 }
 
         function initializeChatApp() {
-            let shortMessageCounter = 0, lastAiMessageMood = null;
+            let shortMessageCounter = 0, lastAiMessageMood = null;let battleHeat = 0; // Tracks the intensity of the battle
             const ui = {
                 chatForm: document.getElementById('chatForm'), userInput: document.getElementById('userInput'),
                 slashBtn: document.getElementById('slashBtn'), sendBtn: document.getElementById('sendBtn'),
@@ -737,58 +756,127 @@ ui.userInput.addEventListener('input', () => {
         }
     });
             
-            ui.chatForm.addEventListener('submit', async (event) => {
-                event.preventDefault(); 
-                const userMessageText = ui.userInput.value.trim(); if (userMessageText === '') return;
-                playSound(sounds.click);
-                const userMessageId = Date.now();
-                displayMessage(userMessageText, 'user', userMessageId);
-                saveMessage({ sender: 'user', text: userMessageText, id: userMessageId });
-                ui.userInput.value = ''; ui.typingIndicator.style.display = 'flex'; scrollToBottom();
-                await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 800));
-                ui.typingIndicator.style.display = 'none'; let aiResponseText;
-                const userBars = userMessageText.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 0);
-                if (userBars.length < 4 && lastAiMessageMood !== 'finish') { shortMessageCounter++; if (shortMessageCounter === 3) aiResponseText = "Please provide 4 or more bars to even be a challenge worth the competition."; else if (shortMessageCounter === 6) aiResponseText = "Seriously, give me something to work with. I need 4 or more bars or this is just a waste of my processing power."; else aiResponseText = smartAssRemarks[Math.floor(Math.random() * smartAssRemarks.length)]; } else { shortMessageCounter = 0; aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, lastAiMessageMood); lastAiMessageMood = null; }
-                const aiMessageId = Date.now() + 1;
-                displayMessage(aiResponseText, 'ai', aiMessageId);
-                saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
-                setTimeout(() => { const aiReaction = analyzeUserVerse(userMessageText); if (aiReaction) addReactionToMessage(userMessageId, aiReaction); }, 500);
-            });
+            // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD 'submit' LISTENER
+
+ui.chatForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const userMessageText = ui.userInput.value.trim();
+    if (userMessageText === '') return;
+
+    playSound(sounds.click);
+    const userMessageId = Date.now();
+    displayMessage(userMessageText, 'user', userMessageId);
+    saveMessage({ sender: 'user', text: userMessageText, id: userMessageId });
+    ui.userInput.value = '';
+    ui.typingIndicator.style.display = 'flex';
+    scrollToBottom();
+
+    // --- NEW: Dynamic Response Delay ---
+    // The AI "thinks" longer for more complex verses.
+    const baseDelay = Math.max(800, Math.min(userMessageText.length * 8, 2500));
+    const finalDelay = baseDelay + (Math.random() * 500);
+    await new Promise(resolve => setTimeout(resolve, finalDelay));
+
+    ui.typingIndicator.style.display = 'none';
+    let aiResponseText;
+    const userBars = userMessageText.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 0);
+
+    if (userBars.length < 4 && lastAiMessageMood !== 'finish') {
+        shortMessageCounter++;
+        if (shortMessageCounter === 3) aiResponseText = "Please provide 4 or more bars to even be a challenge worth the competition.";
+        else if (shortMessageCounter === 6) aiResponseText = "Seriously, give me something to work with. I need 4 or more bars or this is just a waste of my processing power.";
+        else aiResponseText = smartAssRemarks[Math.floor(Math.random() * smartAssRemarks.length)];
+    } else {
+        // --- NEW: "Battle Heat" System ---
+        battleHeat += 10; // Increase heat with every valid exchange
+        if (analyzeUserVerse(userMessageText) === '💀' || analyzeUserVerse(userMessageText) === '😲') {
+            battleHeat += 15; // User being aggressive raises the heat faster
+        }
+
+        let mood = lastAiMessageMood; // Start with the mood from user reaction
+        if (!mood) {
+            // If no mood was set by reaction, determine it based on heat
+            if (battleHeat > 100 && Math.random() < 0.75) {
+                mood = 'finish'; // High heat = high chance of a finisher
+            } else if (battleHeat > 60 && Math.random() < 0.6) {
+                mood = 'angry'; // Medium heat = good chance of getting angry
+            }
+        }
+        
+        shortMessageCounter = 0;
+        aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, mood);
+        lastAiMessageMood = null; // Reset mood after it's been used
+    }
+
+    const aiMessageId = Date.now() + 1;
+    displayMessage(aiResponseText, 'ai', aiMessageId);
+    saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
+    
+    // --- NEW: Post-Verse Banter ---
+    const banterChance = 0.35; // 35% chance to add a comment
+    if (userBars.length >= 4 && battleHeat > 30 && Math.random() < banterChance) {
+        const banterLines = ["Your turn.", "Easy work.", "Top that.", "Let's see what you got.", "That's how it's done."];
+        const banterText = banterLines[Math.floor(Math.random() * banterLines.length)];
+        
+        // Wait for the main verse to finish typing, then add banter
+        const verseDuration = aiResponseText.length * 40; // Rough estimate of animation time
+        setTimeout(() => {
+            const banterId = Date.now() + 2;
+            displayMessage(banterText, 'ai', banterId, null, true); // The 'true' flag marks it as banter
+            saveMessage({ sender: 'ai', text: banterText, id: banterId, reaction: null });
+        }, verseDuration + 500);
+    }
+
+    setTimeout(() => {
+        const aiReaction = analyzeUserVerse(userMessageText);
+        if (aiReaction) addReactionToMessage(userMessageId, aiReaction);
+    }, 500);
+});
             function displayWelcomeMessage() { const t="End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez: AI start the fight.";if(!document.querySelector(".welcome-message")){const e=document.createElement("div");e.classList.add("message-wrapper","welcome-wrapper");const a=document.createElement("div");a.classList.add("message","ai-message","welcome-message"),a.innerHTML=t,e.appendChild(a),ui.chatWindow.insertBefore(e,ui.typingIndicator)}scrollToBottom()}
             // PASTE THIS ENTIRE NEW FUNCTION OVER THE OLD ONE
 
-function displayMessage(text, sender, id, reaction = null) {
+// PASTE THIS TO REPLACE THE PREVIOUS displayMessage FUNCTION
+
+function displayMessage(text, sender, id, reaction = null, isBanter = false) {
     const messageWrapper = document.createElement("div");
     messageWrapper.id = `msg-${id}`;
     messageWrapper.classList.add("message-wrapper", `${sender}-wrapper`);
 
-    const avatar = document.createElement("img");
-    avatar.classList.add("chat-avatar");
-    avatar.src = sender === 'user' ? "ac.png" : "battle-bot.png";
-    messageWrapper.appendChild(avatar);
+    // --- NEW: Only add avatar if it's NOT a banter message ---
+    if (!isBanter) {
+        const avatar = document.createElement("img");
+        avatar.classList.add("chat-avatar");
+        avatar.src = sender === 'user' ? "ac.png" : "battle-bot.png";
+        messageWrapper.appendChild(avatar);
+    }
 
     const messageEl = document.createElement("div");
     messageEl.classList.add("message", `${sender}-message`);
-    messageWrapper.appendChild(messageEl);
     
-    // Add the completed message wrapper to the chat window
+    // --- NEW: Add the banter class if it's a banter message ---
+    if (isBanter) {
+        messageEl.classList.add('banter-message');
+    }
+    
+    messageWrapper.appendChild(messageEl);
     ui.chatWindow.insertBefore(messageWrapper, ui.typingIndicator);
     scrollToBottom();
 
-    if (sender === 'user') {
-        // User messages appear instantly
+    if (sender === 'user' || isBanter) {
+        // User messages and banter appear instantly
         messageEl.innerHTML = text.replace(/\s\/\s/g, "<br>").replace(/[.\n]/g, "<br>");
-        createReactionPlaceholder(messageWrapper, id);
+        if (sender === 'user') {
+            createReactionPlaceholder(messageWrapper, id);
+        }
     } else {
-        // --- NEW: Text Animation Logic for AI ---
-        // Replace slashes with a special marker that we can treat as a "word"
+        // Word-by-word animation for main AI verses
         const words = text.replace(/\s\/\s/g, ' / ').split(' ');
         let i = 0;
 
         function animateWords() {
             if (i < words.length) {
                 const word = words[i];
-                let delay = 120; // Delay between words in milliseconds
+                let delay = 120; // Delay between words
 
                 if (word === '/') {
                     messageEl.innerHTML += '<br>';
@@ -797,18 +885,17 @@ function displayMessage(text, sender, id, reaction = null) {
                     messageEl.innerHTML += (i > 0 && words[i-1] !== '/' ? ' ' : '') + word;
                 }
                 
-                scrollToBottom(); // Scroll with each new word
+                scrollToBottom();
                 i++;
-                
                 setTimeout(animateWords, delay);
             } else {
-                // Animation is complete, now add the reaction UI
+                // Animation complete, add reaction UI
                 if (!text.includes("Please provide")) {
                     createReactionUI(messageWrapper, id, reaction);
                 }
             }
         }
-        animateWords(); // Start the animation
+        animateWords();
     }
 }
             function createReactionPlaceholder(t,e){const s=document.createElement("div");s.className="reaction-container",s.id=`reaction-container-${e}`,t.appendChild(s)}
