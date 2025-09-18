@@ -341,6 +341,18 @@ header {
 .banter-message::after {
     display: none; /* No glossy highlight on banter */
 }
+.chat-form.form-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+@keyframes bubble-glow {
+    0% { box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5); }
+    50% { box-shadow: 0px 0px 15px 3px var(--secondary-color); }
+    100% { box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5); }
+}
+.new-message-glow {
+    animation: bubble-glow 1s ease-out;
+}
     </style>
 </head>
 <body>
@@ -765,18 +777,25 @@ ui.chatForm.addEventListener('submit', async (event) => {
     const userMessageText = ui.userInput.value.trim();
     if (userMessageText === '') return;
 
+    // --- THIS IS THE FIRST CHANGE: We lock the UI here. ---
+    // It adds the 'form-disabled' class and disables the actual input elements.
+    ui.chatForm.classList.add('form-disabled');
+    ui.userInput.disabled = true;
+
     playSound(sounds.click);
     const userMessageId = Date.now();
     displayMessage(userMessageText, 'user', userMessageId);
     saveMessage({ sender: 'user', text: userMessageText, id: userMessageId });
     ui.userInput.value = '';
+    ui.userInput.style.height = 'auto'; // This resets the textarea height to prevent it from staying stretched.
     ui.typingIndicator.style.display = 'flex';
     scrollToBottom();
 
-    // --- NEW: Dynamic Response Delay ---
-    // The AI "thinks" longer for more complex verses.
-    const baseDelay = Math.max(800, Math.min(userMessageText.length * 8, 2500));
-    const finalDelay = baseDelay + (Math.random() * 500);
+    // --- THIS IS THE SECOND CHANGE: The dynamic "thinking" delay. ---
+    // It sets a minimum thinking time and adds more time based on how long your verse was.
+    const baseDelay = 1000; // Minimum 1 second of thinking time.
+    const dynamicDelay = Math.min(userMessageText.length * 15, 4000); // Adds up to 4 extra seconds based on text length.
+    const finalDelay = baseDelay + dynamicDelay + (Math.random() * 500); // Adds a little randomness.
     await new Promise(resolve => setTimeout(resolve, finalDelay));
 
     ui.typingIndicator.style.display = 'none';
@@ -789,42 +808,43 @@ ui.chatForm.addEventListener('submit', async (event) => {
         else if (shortMessageCounter === 6) aiResponseText = "Seriously, give me something to work with. I need 4 or more bars or this is just a waste of my processing power.";
         else aiResponseText = smartAssRemarks[Math.floor(Math.random() * smartAssRemarks.length)];
     } else {
-        // --- NEW: "Battle Heat" System ---
-        battleHeat += 10; // Increase heat with every valid exchange
+        battleHeat += 10;
         if (analyzeUserVerse(userMessageText) === '💀' || analyzeUserVerse(userMessageText) === '😲') {
-            battleHeat += 15; // User being aggressive raises the heat faster
+            battleHeat += 15;
         }
 
-        let mood = lastAiMessageMood; // Start with the mood from user reaction
+        let mood = lastAiMessageMood;
         if (!mood) {
-            // If no mood was set by reaction, determine it based on heat
             if (battleHeat > 100 && Math.random() < 0.75) {
-                mood = 'finish'; // High heat = high chance of a finisher
+                mood = 'finish';
             } else if (battleHeat > 60 && Math.random() < 0.6) {
-                mood = 'angry'; // Medium heat = good chance of getting angry
+                mood = 'angry';
             }
         }
         
         shortMessageCounter = 0;
         aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, mood);
-        lastAiMessageMood = null; // Reset mood after it's been used
+        lastAiMessageMood = null;
     }
 
     const aiMessageId = Date.now() + 1;
     displayMessage(aiResponseText, 'ai', aiMessageId);
     saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
     
-    // --- NEW: Post-Verse Banter ---
-    const banterChance = 0.35; // 35% chance to add a comment
+    // --- THIS IS THE THIRD CHANGE: We unlock the UI here. ---
+    // It removes the disabled class and re-enables the input so you can type again.
+    ui.chatForm.classList.remove('form-disabled');
+    ui.userInput.disabled = false;
+    ui.userInput.focus(); // This puts the cursor back in the text box automatically.
+
+    const banterChance = 0.35;
     if (userBars.length >= 4 && battleHeat > 30 && Math.random() < banterChance) {
         const banterLines = ["Your turn.", "Easy work.", "Top that.", "Let's see what you got.", "That's how it's done."];
         const banterText = banterLines[Math.floor(Math.random() * banterLines.length)];
-        
-        // Wait for the main verse to finish typing, then add banter
-        const verseDuration = aiResponseText.length * 40; // Rough estimate of animation time
+        const verseDuration = aiResponseText.length * 40;
         setTimeout(() => {
             const banterId = Date.now() + 2;
-            displayMessage(banterText, 'ai', banterId, null, true); // The 'true' flag marks it as banter
+            displayMessage(banterText, 'ai', banterId, null, true);
             saveMessage({ sender: 'ai', text: banterText, id: banterId, reaction: null });
         }, verseDuration + 500);
     }
@@ -835,10 +855,7 @@ ui.chatForm.addEventListener('submit', async (event) => {
     }, 500);
 });
             function displayWelcomeMessage() { const t="End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez: AI start the fight.";if(!document.querySelector(".welcome-message")){const e=document.createElement("div");e.classList.add("message-wrapper","welcome-wrapper");const a=document.createElement("div");a.classList.add("message","ai-message","welcome-message"),a.innerHTML=t,e.appendChild(a),ui.chatWindow.insertBefore(e,ui.typingIndicator)}scrollToBottom()}
-            // PASTE THIS ENTIRE NEW FUNCTION OVER THE OLD ONE
-
-// PASTE THIS TO REPLACE THE PREVIOUS displayMessage FUNCTION
-
+            
 function displayMessage(text, sender, id, reaction = null, isBanter = false) {
     const messageWrapper = document.createElement("div");
     messageWrapper.id = `msg-${id}`;
@@ -852,7 +869,7 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
     }
 
     const messageEl = document.createElement("div");
-    messageEl.classList.add("message", `${sender}-message`);
+    messageEl.classList.add("message", `${sender}-message`, "new-message-glow");
     
     if (isBanter) {
         messageEl.classList.add('banter-message');
@@ -908,12 +925,53 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
     }
 }
             function createReactionPlaceholder(t,e){const s=document.createElement("div");s.className="reaction-container",s.id=`reaction-container-${e}`,t.appendChild(s)}
-            function createReactionUI(t,e,s){const a=document.createElement("div");a.className="reaction-container";const i=document.createElement("div");i.className="reaction-capsule";const n=document.createElement("div");n.className="reaction-button";const d=document.createElement("div");d.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-3-3h6v-2H9v2zm.5-4h5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-5c-.28 0-.5.22-.5.5s.22.5.5.5z"/></svg>';const o=document.createElement("div");o.className="emoji-display",n.appendChild(d),n.appendChild(o),n.onclick=t=>{t.stopPropagation(),i.classList.toggle("expanded"),document.body.addEventListener("click",()=>i.classList.remove("expanded"),{once:!0})},["😂","🤔","😲","💀"].forEach(t=>{const s=document.createElement("span");s.textContent=t,s.onclick=a=>{a.stopPropagation(),setReaction(t,d,o,i,e),lastAiMessageMood="😂"===t?"angry":"🤔"===t?"complex":"😲"===t?"arrogant":"finish"},i.appendChild(s)}),a.appendChild(i),a.appendChild(n),t.appendChild(a),s&&setReaction(s,d,o,i,e,!1)}
-            function setReaction(t,e,s,a,i,n=!0){n&&playSound(sounds.click),e.style.display="none",s.style.display="block",s.textContent=t,a.classList.remove("expanded");const d=getStorage();const o=d.currentSession.findIndex(t=>t.id===i);o>-1&&(d.currentSession[o].reaction=t,saveStorage(d))}
+            function createReactionUI(t, e, s) {
+    const a = document.createElement("div");
+    a.className = "reaction-container";
+    const i = document.createElement("div");
+    i.className = "reaction-capsule";
+    const n = document.createElement("div");
+    n.className = "reaction-button";
+    const d = document.createElement("div");
+    d.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-3-3h6v-2H9v2zm.5-4h5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-5c-.28 0-.5.22-.5.5s.22.5.5.5z"/></svg>';
+    const o = document.createElement("div");
+    o.className = "emoji-display", n.appendChild(d), n.appendChild(o), n.onclick = t => { t.stopPropagation(), i.classList.toggle("expanded"), document.body.addEventListener("click", () => i.classList.remove("expanded"), { once: !0 }) }, ["😂", "🤔", "😲", "💀"].forEach(t => {
+        const s = document.createElement("span");
+        s.textContent = t, s.onclick = a => {
+            a.stopPropagation(), 
+            setReaction(t, d, o, i, e) // --- CHANGED: This line is now simpler. It no longer sets lastAiMessageMood here. ---
+        }, i.appendChild(s)
+    }), a.appendChild(i), a.appendChild(n), t.appendChild(a), s && setReaction(s, d, o, i, e, !1)
+}
+            function setReaction(t, e, s, a, i, n = !0) {
+    n && playSound(sounds.click), e.style.display = "none", s.style.display = "block", s.textContent = t, a.classList.remove("expanded");
+    
+    // --- THIS IS THE NEW LOGIC THAT WAS ADDED ---
+    // It checks which emoji was clicked and sets the AI's mood for its next turn.
+    switch (t) {
+        case '😂': lastAiMessageMood = 'angry'; break;
+        case '🤔': lastAiMessageMood = 'complex'; break;
+        case '😲': lastAiMessageMood = 'arrogant'; break;
+        case '💀': lastAiMessageMood = 'finish'; break;
+    }
+    // --- END OF NEW LOGIC ---
+
+    const d = getStorage();
+    const o = d.currentSession.findIndex(t => t.id === i);
+    o > -1 && (d.currentSession[o].reaction = t, saveStorage(d))
+}
             function addReactionToMessage(t,e){const s=document.getElementById(`reaction-container-${t}`);if(s){const a=document.createElement("div");a.className="reaction-button",a.innerHTML=`<div class="emoji-display" style="display: block;">${e}</div>`,s.appendChild(a)}}
             function analyzeUserVerse(t){const e=t.toLowerCase(),s=t.split(/\s+/).length;if(["kill","dead","die","grave","funeral","gun","shoot","knife","blade","body","coffin","casket","blood","blast"].some(t=>e.includes(t)))return"💀";if(["fuck","shit","bitch","asshole","damn"].some(t=>e.includes(t)))return"😲";if(t.length>250||/\w{10,}/.test(e))return"🤔";if(s<6)return"😂";return null}
             function getStorage() { const s = JSON.parse(localStorage.getItem('flamezChatStorageV2')) || { sessions: [], currentSession: [] }; if (!Array.isArray(s.sessions)) s.sessions = []; if (!Array.isArray(s.currentSession)) s.currentSession = []; return s; } function saveStorage(s) { localStorage.setItem('flamezChatStorageV2', JSON.stringify(s)); } function saveMessage(msg) { const s = getStorage(); s.currentSession.push(msg); saveStorage(s); }
-            function clearChatUI() { ui.chatWindow.innerHTML = ''; ui.chatWindow.appendChild(ui.typingIndicator); battleEngine = initializeBattleEngine(); displayWelcomeMessage(); shortMessageCounter = 0; }             function loadCurrentSession() { 
+            function clearChatUI() { 
+    ui.chatWindow.innerHTML = ''; 
+    ui.chatWindow.appendChild(ui.typingIndicator); 
+    battleEngine = initializeBattleEngine(); 
+    displayWelcomeMessage(); 
+    shortMessageCounter = 0; 
+    battleHeat = 0; // <-- ADDED: Resets the battle heat to zero.
+    lastAiMessageMood = null; // <-- ADDED: Clears the AI's previous mood.
+}             function loadCurrentSession() { 
                 clearChatUI(); 
                 const storage = getStorage(); 
                 if (storage.currentSession.length > 0) { 
@@ -922,7 +980,20 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
                 } 
                 isInitialLoad = false;
             } function archiveCurrentSession() { const storage = getStorage(); if (storage.currentSession.length > 0) { const session = { id: Date.now(), messages: storage.currentSession }; storage.sessions.push(session); storage.currentSession = []; saveStorage(storage); } }
-            function displayHistory() { const storage = getStorage(); const historyContent = document.getElementById('historyContent'); historyContent.innerHTML = ''; if (storage.sessions.length === 0) { historyContent.innerHTML = '<p>No past battles found.</p>'; return; } storage.sessions.slice().reverse().forEach(session => { const date = new Date(session.id); const link = document.createElement('a'); link.href = '#'; link.dataset.sessionId = session.id; link.textContent = `Battle from ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`; link.addEventListener('click', (e) => { e.preventDefault(); loadSession(session.id); }); historyContent.appendChild(link); }); } function loadSession(sessionId) { archiveCurrentSession(); const storage = getStorage(); const sessionToLoad = storage.sessions.find(s => s.id === sessionId); if (sessionToLoad) { storage.currentSession = sessionToLoad.messages; storage.sessions = storage.sessions.filter(s => s.id !== sessionId); saveStorage(storage); loadCurrentSession(); document.getElementById('historyOverlay').style.display = 'none'; } }
+            function displayHistory() { const storage = getStorage(); const historyContent = document.getElementById('historyContent'); historyContent.innerHTML = ''; if (storage.sessions.length === 0) { historyContent.innerHTML = '<p>No past battles found.</p>'; return; } storage.sessions.slice().reverse().forEach(session => { const date = new Date(session.id); const link = document.createElement('a'); link.href = '#'; link.dataset.sessionId = session.id; link.textContent = `Battle from ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`; link.addEventListener('click', (e) => { e.preventDefault(); loadSession(session.id); }); historyContent.appendChild(link); }); } function loadSession(sessionId) { 
+    archiveCurrentSession(); 
+    const storage = getStorage(); 
+    const sessionToLoad = storage.sessions.find(s => s.id === sessionId); 
+    if (sessionToLoad) { 
+        storage.currentSession = sessionToLoad.messages; 
+        storage.sessions = storage.sessions.filter(s => s.id !== sessionId); 
+        saveStorage(storage); 
+        loadCurrentSession(); 
+        document.getElementById('historyOverlay').style.display = 'none'; 
+        battleHeat = 0; // <-- ADDED: Resets heat when loading a past battle.
+        lastAiMessageMood = null; // <-- ADDED: Resets mood when loading a past battle.
+    } 
+}
             function scrollToBottom() { ui.chatWindow.scrollTop = ui.chatWindow.scrollHeight; }
             const setupButtonPress = (button) => { if(!button) return; const handlePress = (e) => { e.preventDefault(); button.classList.add('button-pressed'); }; const handleRelease = () => { button.classList.remove('button-pressed'); }; ['mousedown', 'touchstart'].forEach(evt => button.addEventListener(evt, handlePress, { passive: true })); ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => button.addEventListener(evt, handleRelease)); };
             [ui.slashBtn, ui.sendBtn].forEach(setupButtonPress);
