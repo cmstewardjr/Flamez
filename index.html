@@ -746,6 +746,11 @@ ui.userInput.addEventListener('input', () => {
             ui.chatForm.requestSubmit(); // Submits the form
         }
     });
+     ui.userInput.addEventListener('focus', () => {
+        setTimeout(() => {
+            ui.chatForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 300); 
+    });
             
             // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD 'submit' LISTENER
 
