@@ -816,9 +816,8 @@ ui.chatForm.addEventListener('submit', async (event) => {
     if (userMessageText === '') return;
 
     // --- THIS IS THE FIRST CHANGE: We lock the UI here. ---
-    // It adds the 'form-disabled' class and disables the actual input elements.
+    // It adds the 'form-disabled' class to prevent clicks, but doesn't disable the input.
     ui.chatForm.classList.add('form-disabled');
-    ui.userInput.disabled = true;
 
     playSound(sounds.click);
     const userMessageId = Date.now();
@@ -870,9 +869,8 @@ ui.chatForm.addEventListener('submit', async (event) => {
     saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
     
     // --- THIS IS THE THIRD CHANGE: We unlock the UI here. ---
-    // It removes the disabled class and re-enables the input so you can type again.
+    // It removes the disabled class so you can type again.
     ui.chatForm.classList.remove('form-disabled');
-    ui.userInput.disabled = false;
     ui.userInput.focus(); // This puts the cursor back in the text box automatically.
 
     const banterChance = 0.35;
