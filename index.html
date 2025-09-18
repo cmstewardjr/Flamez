@@ -454,6 +454,7 @@ header {
         // GLOBAL STATE
         let battleEngine = null;
         let wasThemeMusicPlayedOnMenu = false;
+        let isInitialLoad = true; // Flag to control animations on startup
 
         function triggerHapticFeedback() { if (navigator.vibrate) navigator.vibrate(10); }
 
@@ -746,11 +747,16 @@ ui.userInput.addEventListener('input', () => {
             ui.chatForm.requestSubmit(); // Submits the form
         }
     });
-     ui.userInput.addEventListener('focus', () => {
-        setTimeout(() => {
-            ui.chatForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }, 300); 
+     if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        // This event fires when the keyboard appears/disappears.
+        if (document.activeElement === ui.userInput) {
+            setTimeout(() => {
+                 ui.chatForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+        }
     });
+}
             
             // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD 'submit' LISTENER
 
@@ -838,7 +844,6 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
     messageWrapper.id = `msg-${id}`;
     messageWrapper.classList.add("message-wrapper", `${sender}-wrapper`);
 
-    // --- NEW: Only add avatar if it's NOT a banter message ---
     if (!isBanter) {
         const avatar = document.createElement("img");
         avatar.classList.add("chat-avatar");
@@ -849,49 +854,57 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
     const messageEl = document.createElement("div");
     messageEl.classList.add("message", `${sender}-message`);
     
-    // --- NEW: Add the banter class if it's a banter message ---
     if (isBanter) {
         messageEl.classList.add('banter-message');
     }
     
     messageWrapper.appendChild(messageEl);
     ui.chatWindow.insertBefore(messageWrapper, ui.typingIndicator);
-    scrollToBottom();
+    
+    // Scroll needs to happen after the element is in the DOM
+    if (!isInitialLoad) {
+        scrollToBottom();
+    }
 
-    if (sender === 'user' || isBanter) {
-        // User messages and banter appear instantly
-        messageEl.innerHTML = text.replace(/\s\/\s/g, "<br>").replace(/[.\n]/g, "<br>");
-        if (sender === 'user') {
-            createReactionPlaceholder(messageWrapper, id);
-        }
-    } else {
-        // Word-by-word animation for main AI verses
+    // FIX: Animation now ONLY runs if it's an AI message, NOT banter, AND NOT the initial app load.
+    if (sender === 'ai' && !isBanter && !isInitialLoad) {
         const words = text.replace(/\s\/\s/g, ' / ').split(' ');
         let i = 0;
-
         function animateWords() {
             if (i < words.length) {
                 const word = words[i];
-                let delay = 120; // Delay between words
-
+                let delay = 120;
                 if (word === '/') {
                     messageEl.innerHTML += '<br>';
-                    delay = 400; // Longer pause for end of a bar
+                    delay = 400;
                 } else {
                     messageEl.innerHTML += (i > 0 && words[i-1] !== '/' ? ' ' : '') + word;
                 }
-                
                 scrollToBottom();
                 i++;
                 setTimeout(animateWords, delay);
             } else {
-                // Animation complete, add reaction UI
                 if (!text.includes("Please provide")) {
                     createReactionUI(messageWrapper, id, reaction);
                 }
             }
         }
         animateWords();
+    } else {
+        // ALL other messages (user, banter, and anything on load) appear instantly.
+        messageEl.innerHTML = text.replace(/\s\/\s/g, "<br>").replace(/[.\n]/g, "<br>");
+        if (sender === 'user') {
+            createReactionPlaceholder(messageWrapper, id);
+        }
+        if (sender === 'ai' && !isBanter && !text.includes("Please provide")) {
+             createReactionUI(messageWrapper, id, reaction);
+        }
+    }
+    
+    // Ensure final scroll on load to show the latest message
+    if (isInitialLoad) {
+        // Use a tiny timeout to ensure all elements are rendered before scrolling
+        setTimeout(() => scrollToBottom(), 50);
     }
 }
             function createReactionPlaceholder(t,e){const s=document.createElement("div");s.className="reaction-container",s.id=`reaction-container-${e}`,t.appendChild(s)}
@@ -900,7 +913,15 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
             function addReactionToMessage(t,e){const s=document.getElementById(`reaction-container-${t}`);if(s){const a=document.createElement("div");a.className="reaction-button",a.innerHTML=`<div class="emoji-display" style="display: block;">${e}</div>`,s.appendChild(a)}}
             function analyzeUserVerse(t){const e=t.toLowerCase(),s=t.split(/\s+/).length;if(["kill","dead","die","grave","funeral","gun","shoot","knife","blade","body","coffin","casket","blood","blast"].some(t=>e.includes(t)))return"💀";if(["fuck","shit","bitch","asshole","damn"].some(t=>e.includes(t)))return"😲";if(t.length>250||/\w{10,}/.test(e))return"🤔";if(s<6)return"😂";return null}
             function getStorage() { const s = JSON.parse(localStorage.getItem('flamezChatStorageV2')) || { sessions: [], currentSession: [] }; if (!Array.isArray(s.sessions)) s.sessions = []; if (!Array.isArray(s.currentSession)) s.currentSession = []; return s; } function saveStorage(s) { localStorage.setItem('flamezChatStorageV2', JSON.stringify(s)); } function saveMessage(msg) { const s = getStorage(); s.currentSession.push(msg); saveStorage(s); }
-            function clearChatUI() { ui.chatWindow.innerHTML = ''; ui.chatWindow.appendChild(ui.typingIndicator); battleEngine = initializeBattleEngine(); displayWelcomeMessage(); shortMessageCounter = 0; } function loadCurrentSession() { clearChatUI(); const storage = getStorage(); if (storage.currentSession.length > 0) { document.querySelector('.welcome-message')?.parentElement.remove(); storage.currentSession.forEach(msg => displayMessage(msg.text, msg.sender, msg.id, msg.reaction)); } } function archiveCurrentSession() { const storage = getStorage(); if (storage.currentSession.length > 0) { const session = { id: Date.now(), messages: storage.currentSession }; storage.sessions.push(session); storage.currentSession = []; saveStorage(storage); } }
+            function clearChatUI() { ui.chatWindow.innerHTML = ''; ui.chatWindow.appendChild(ui.typingIndicator); battleEngine = initializeBattleEngine(); displayWelcomeMessage(); shortMessageCounter = 0; }             function loadCurrentSession() { 
+                clearChatUI(); 
+                const storage = getStorage(); 
+                if (storage.currentSession.length > 0) { 
+                    document.querySelector('.welcome-message')?.parentElement.remove(); 
+                    storage.currentSession.forEach(msg => displayMessage(msg.text, msg.sender, msg.id, msg.reaction)); 
+                } 
+                isInitialLoad = false;
+            } function archiveCurrentSession() { const storage = getStorage(); if (storage.currentSession.length > 0) { const session = { id: Date.now(), messages: storage.currentSession }; storage.sessions.push(session); storage.currentSession = []; saveStorage(storage); } }
             function displayHistory() { const storage = getStorage(); const historyContent = document.getElementById('historyContent'); historyContent.innerHTML = ''; if (storage.sessions.length === 0) { historyContent.innerHTML = '<p>No past battles found.</p>'; return; } storage.sessions.slice().reverse().forEach(session => { const date = new Date(session.id); const link = document.createElement('a'); link.href = '#'; link.dataset.sessionId = session.id; link.textContent = `Battle from ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`; link.addEventListener('click', (e) => { e.preventDefault(); loadSession(session.id); }); historyContent.appendChild(link); }); } function loadSession(sessionId) { archiveCurrentSession(); const storage = getStorage(); const sessionToLoad = storage.sessions.find(s => s.id === sessionId); if (sessionToLoad) { storage.currentSession = sessionToLoad.messages; storage.sessions = storage.sessions.filter(s => s.id !== sessionId); saveStorage(storage); loadCurrentSession(); document.getElementById('historyOverlay').style.display = 'none'; } }
             function scrollToBottom() { ui.chatWindow.scrollTop = ui.chatWindow.scrollHeight; }
             const setupButtonPress = (button) => { if(!button) return; const handlePress = (e) => { e.preventDefault(); button.classList.add('button-pressed'); }; const handleRelease = () => { button.classList.remove('button-pressed'); }; ['mousedown', 'touchstart'].forEach(evt => button.addEventListener(evt, handlePress, { passive: true })); ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => button.addEventListener(evt, handleRelease)); };
