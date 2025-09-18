@@ -224,12 +224,21 @@ header {
         #slashBtn::before, #sendBtn::before, #sendBtn svg { filter: drop-shadow(-0.5px -0.5px 0 #000) drop-shadow(0.5px -0.5px 0 #000) drop-shadow(-0.5px 0.5px 0 #000) drop-shadow(0.5px 0.5px 0 #000); }
         #slashBtn.button-pressed::before, #sendBtn.button-pressed::before { animation: flash 0.3s ease-out; } @keyframes flash { from { transform: translate(-50%, -50%) scale(0); opacity: 0.7; } to { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } } #sendBtn svg { width: 24px; height: 24px; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 998; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background-color: var(--surface-color); padding: 30px; border-radius: 15px; color: white; text-align: center; border: 1px solid var(--ai-bubble); max-width: 90%; }
+        .modal-content { background-color: var(--surface-color); padding: 30px; border-radius: 15px; color: white; text-align: center; border: 1px solid var(--ai-bubble); max-width: 90%; overflow-x: hidden; }
         .modal-content h1 { font-family: 'Bebas Neue', cursive; font-size: 2.5rem; letter-spacing: 2px; } .modal-content p { margin-top: 10px; }
         #backBtn, #historyBackBtn, .confirm-btn { font-family: 'Bebas Neue', cursive; font-size: 1.5rem; letter-spacing: 2px; color: white; border: none; border-radius: 10px; padding: 10px 40px; cursor: pointer; margin-top: 30px; }
         #confirmBtnWrapper { display: flex; gap: 15px; justify-content: center;} #confirmYesBtn, #tutorialYesBtn, #musicContinueYesBtn { background: var(--fire-gradient); }
         #confirmNoBtn, #backBtn, #historyBackBtn, #tutorialNoBtn, #musicContinueNoBtn { background: var(--blue-flame-gradient); }
-        #historyContent { margin-top: 20px; text-align: left; overflow-y: auto; max-height: 50vh; font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary); } #historyContent a { color: var(--primary-color); text-decoration: none; display: block; padding: 8px; border-radius: 5px; margin-bottom: 5px; transition: background-color 0.2s; }
+        #historyContent {
+    margin-top: 20px;
+    text-align: left;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 50vh;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+} #historyContent a { color: var(--primary-color); text-decoration: none; display: block; padding: 8px; border-radius: 5px; margin-bottom: 5px; transition: background-color 0.2s; }
         #historyContent a:hover { background-color: var(--ai-bubble); } #historyDisclaimer { font-size: 0.7rem; color: #888; margin-top: 20px;}
         .do-not-show-again { margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; } .do-not-show-again input { accent-color: var(--primary-color); }
         .reaction-container { position: absolute; bottom: -8px; z-index: 10; display: flex; align-items: center; }
@@ -351,7 +360,33 @@ header {
     100% { box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5); }
 }
 .new-message-glow {
-    animation: bubble-glow 1s ease-out;
+    animation: bubble-glow 1s ease-out forwards; /* <-- CHANGED: Added "forwards" */
+}
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.history-item a {
+    flex-grow: 1; /* Make the link take up most of the space */
+    margin-bottom: 0;
+}
+
+.delete-history-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 5px;
+    color: var(--text-secondary);
+    transition: color 0.2s, transform 0.2s;
+}
+
+.delete-history-btn:hover {
+    color: var(--primary-color);
+    transform: scale(1.2);
 }
     </style>
 </head>
@@ -489,7 +524,6 @@ header {
         themeMusic.play().catch(e => {}); // Autoplay might be blocked
         wasThemeMusicPlayedOnMenu = true;
     }
-
     playMusicBtn.addEventListener('click', () => {
         // Haptic feedback is already attached by the loop above, no need to call it here.
         if (themeMusic.paused) {
@@ -663,6 +697,10 @@ function parseLyrics(lyrics) {
 
         function initializeChatApp() {
             let shortMessageCounter = 0, lastAiMessageMood = null;let battleHeat = 0; // Tracks the intensity of the battle
+            const storage = getStorage();
+    if (storage.currentSession.length > 0) {
+        archiveCurrentSession();
+    }
             const ui = {
                 chatForm: document.getElementById('chatForm'), userInput: document.getElementById('userInput'),
                 slashBtn: document.getElementById('slashBtn'), sendBtn: document.getElementById('sendBtn'),
@@ -864,7 +902,21 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
     if (!isBanter) {
         const avatar = document.createElement("img");
         avatar.classList.add("chat-avatar");
-        avatar.src = sender === 'user' ? "ac.png" : "battle-bot.png";
+        
+        // --- THIS IS THE NEW LOGIC ---
+        // It sets the avatar source based on the sender and the AI's current mood.
+        if (sender === 'user') {
+            avatar.src = "ac.png";
+        } else {
+            // Check the AI's mood. If it's angry or going for a finisher, use the aggressive avatar.
+            if (lastAiMessageMood === 'angry' || lastAiMessageMood === 'finish') {
+                avatar.src = "battle-bot-4.png"; // Your new angry avatar
+            } else {
+                avatar.src = "battle-bot.png"; // The default AI avatar
+            }
+        }
+        // --- END OF NEW LOGIC ---
+
         messageWrapper.appendChild(avatar);
     }
 
@@ -903,6 +955,7 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
             } else {
                 if (!text.includes("Please provide")) {
                     createReactionUI(messageWrapper, id, reaction);
+                    messageEl.classList.remove('new-message-glow'); 
                 }
             }
         }
@@ -971,27 +1024,82 @@ function displayMessage(text, sender, id, reaction = null, isBanter = false) {
     shortMessageCounter = 0; 
     battleHeat = 0; // <-- ADDED: Resets the battle heat to zero.
     lastAiMessageMood = null; // <-- ADDED: Clears the AI's previous mood.
-}             function loadCurrentSession() { 
-                clearChatUI(); 
-                const storage = getStorage(); 
-                if (storage.currentSession.length > 0) { 
-                    document.querySelector('.welcome-message')?.parentElement.remove(); 
-                    storage.currentSession.forEach(msg => displayMessage(msg.text, msg.sender, msg.id, msg.reaction)); 
-                } 
-                isInitialLoad = false;
-            } function archiveCurrentSession() { const storage = getStorage(); if (storage.currentSession.length > 0) { const session = { id: Date.now(), messages: storage.currentSession }; storage.sessions.push(session); storage.currentSession = []; saveStorage(storage); } }
-            function displayHistory() { const storage = getStorage(); const historyContent = document.getElementById('historyContent'); historyContent.innerHTML = ''; if (storage.sessions.length === 0) { historyContent.innerHTML = '<p>No past battles found.</p>'; return; } storage.sessions.slice().reverse().forEach(session => { const date = new Date(session.id); const link = document.createElement('a'); link.href = '#'; link.dataset.sessionId = session.id; link.textContent = `Battle from ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`; link.addEventListener('click', (e) => { e.preventDefault(); loadSession(session.id); }); historyContent.appendChild(link); }); } function loadSession(sessionId) { 
+}             
+function loadCurrentSession() {
+    clearChatUI();
+    const storage = getStorage();
+    if (storage.currentSession.length > 0) {
+        document.querySelector('.welcome-message')?.parentElement.remove();
+        storage.currentSession.forEach(msg => displayMessage(msg.text, msg.sender, msg.id, msg.reaction));
+    }
+
+    // --- CHANGED: This timeout ensures all messages render BEFORE we flip the flag ---
+    setTimeout(() => {
+        isInitialLoad = false;
+    }, 100); 
+}
+            function archiveCurrentSession() { const storage = getStorage(); if (storage.currentSession.length > 0) { const session = { id: Date.now(), messages: storage.currentSession }; storage.sessions.push(session); storage.currentSession = []; saveStorage(storage); } }
+            function displayHistory() {
+    const storage = getStorage();
+    const historyContent = document.getElementById('historyContent');
+    historyContent.innerHTML = '';
+    if (storage.sessions.length === 0) {
+        historyContent.innerHTML = '<p>No past battles found.</p>';
+        return;
+    }
+
+    storage.sessions.slice().reverse().forEach(session => {
+        const date = new Date(session.id);
+
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+
+        const link = document.createElement('a');
+        link.href = '#';
+        link.dataset.sessionId = session.id;
+        link.textContent = `Battle from ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadSession(session.id);
+        });
+
+        // --- THIS IS THE NEW PART: The delete button ---
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-history-btn';
+        deleteBtn.innerHTML = '&#128465;'; // Trash can emoji icon
+        deleteBtn.setAttribute('aria-label', 'Delete battle');
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent the link from firing
+            if (confirm('Are you sure you want to delete this battle forever?')) {
+                deleteSession(session.id);
+            }
+        });
+        // --- END OF NEW PART ---
+
+        historyItem.appendChild(link);
+        historyItem.appendChild(deleteBtn);
+        historyContent.appendChild(historyItem);
+    });
+
+function deleteSession(sessionId) {
+    let storage = getStorage();
+    storage.sessions = storage.sessions.filter(s => s.id !== sessionId);
+    saveStorage(storage);
+    displayHistory(); // Refresh the history list to show the item is gone
+}
+} function loadSession(sessionId) { 
     archiveCurrentSession(); 
     const storage = getStorage(); 
     const sessionToLoad = storage.sessions.find(s => s.id === sessionId); 
     if (sessionToLoad) { 
+        isInitialLoad = true; // This line fixes the animation issue
         storage.currentSession = sessionToLoad.messages; 
         storage.sessions = storage.sessions.filter(s => s.id !== sessionId); 
         saveStorage(storage); 
         loadCurrentSession(); 
         document.getElementById('historyOverlay').style.display = 'none'; 
-        battleHeat = 0; // <-- ADDED: Resets heat when loading a past battle.
-        lastAiMessageMood = null; // <-- ADDED: Resets mood when loading a past battle.
+        battleHeat = 0; 
+        lastAiMessageMood = null;
     } 
 }
             function scrollToBottom() { ui.chatWindow.scrollTop = ui.chatWindow.scrollHeight; }
