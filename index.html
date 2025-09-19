@@ -378,10 +378,23 @@ header {
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 1.5rem;
-    padding: 5px;
-    color: var(--text-secondary);
-    transition: color 0.2s, transform 0.2s;
+    padding: 0; /* Remove padding from the button itself */
+    width: 24px; /* Give the button a fixed size */
+    height: 24px;
+    flex-shrink: 0; /* Prevent the button from shrinking */
+    transition: transform 0.2s, filter 0.2s;
+    margin-left: 10px; /* Add some space between the text and the button */
+}
+
+.delete-history-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Prevents the image from stretching */
+}
+
+.delete-history-btn:hover {
+    transform: scale(1.1);
+    filter: brightness(1.5); /* Use a filter for hover feedback instead of color */
 }
 
 .delete-history-btn:hover {
@@ -794,7 +807,7 @@ ui.userInput.addEventListener('input', () => {
     ui.userInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // Prevents a new line from being added
-            ui.chatForm.requestSubmit(); // Submits the form
+            handleFormSubmission(); // Calls our new function directly
         }
     });
      if (window.visualViewport) {
@@ -810,29 +823,28 @@ ui.userInput.addEventListener('input', () => {
             
             // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD 'submit' LISTENER
 
-ui.chatForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+const handleFormSubmission = async () => {
+    // Prevent submissions if the form is already processing
+    if (ui.chatForm.classList.contains('form-disabled')) return;
+
     const userMessageText = ui.userInput.value.trim();
     if (userMessageText === '') return;
 
-    // --- THIS IS THE FIRST CHANGE: We lock the UI here. ---
-    // It adds the 'form-disabled' class to prevent clicks, but doesn't disable the input.
     ui.chatForm.classList.add('form-disabled');
-
     playSound(sounds.click);
+
     const userMessageId = Date.now();
     displayMessage(userMessageText, 'user', userMessageId);
     saveMessage({ sender: 'user', text: userMessageText, id: userMessageId });
+
     ui.userInput.value = '';
-    ui.userInput.style.height = 'auto'; // This resets the textarea height to prevent it from staying stretched.
+    ui.userInput.style.height = 'auto';
     ui.typingIndicator.style.display = 'flex';
     scrollToBottom();
 
-    // --- THIS IS THE SECOND CHANGE: The dynamic "thinking" delay. ---
-    // It sets a minimum thinking time and adds more time based on how long your verse was.
-    const baseDelay = 1000; // Minimum 1 second of thinking time.
-    const dynamicDelay = Math.min(userMessageText.length * 15, 4000); // Adds up to 4 extra seconds based on text length.
-    const finalDelay = baseDelay + dynamicDelay + (Math.random() * 500); // Adds a little randomness.
+    const baseDelay = 1000;
+    const dynamicDelay = Math.min(userMessageText.length * 15, 4000);
+    const finalDelay = baseDelay + dynamicDelay + (Math.random() * 500);
     await new Promise(resolve => setTimeout(resolve, finalDelay));
 
     ui.typingIndicator.style.display = 'none';
@@ -868,10 +880,8 @@ ui.chatForm.addEventListener('submit', async (event) => {
     displayMessage(aiResponseText, 'ai', aiMessageId);
     saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
     
-    // --- THIS IS THE THIRD CHANGE: We unlock the UI here. ---
-    // It removes the disabled class so you can type again.
     ui.chatForm.classList.remove('form-disabled');
-    ui.userInput.focus(); // This puts the cursor back in the text box automatically.
+    // We don't need ui.userInput.focus() because focus was never lost.
 
     const banterChance = 0.35;
     if (userBars.length >= 4 && battleHeat > 30 && Math.random() < banterChance) {
@@ -889,7 +899,10 @@ ui.chatForm.addEventListener('submit', async (event) => {
         const aiReaction = analyzeUserVerse(userMessageText);
         if (aiReaction) addReactionToMessage(userMessageId, aiReaction);
     }, 500);
-});
+};
+
+// We now listen for a CLICK on the send button, not a form submit.
+ui.sendBtn.addEventListener('click', handleFormSubmission);
             function displayWelcomeMessage() { const t="End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez: AI start the fight.";if(!document.querySelector(".welcome-message")){const e=document.createElement("div");e.classList.add("message-wrapper","welcome-wrapper");const a=document.createElement("div");a.classList.add("message","ai-message","welcome-message"),a.innerHTML=t,e.appendChild(a),ui.chatWindow.insertBefore(e,ui.typingIndicator)}scrollToBottom()}
             
 function displayMessage(text, sender, id, reaction = null, isBanter = false) {
@@ -1064,7 +1077,10 @@ function loadCurrentSession() {
         // --- THIS IS THE NEW PART: The delete button ---
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-history-btn';
-        deleteBtn.innerHTML = '&#128465;'; // Trash can emoji icon
+        const trashIcon = document.createElement('img');
+        trashIcon.src = 'trash-bin.png';
+        trashIcon.alt = 'Delete Battle';
+        deleteBtn.appendChild(trashIcon);
         deleteBtn.setAttribute('aria-label', 'Delete battle');
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // Prevent the link from firing
