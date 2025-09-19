@@ -279,57 +279,63 @@ header {
         .song-info p { margin: 5px 0 0; font-size: 0.9rem; color: var(--text-secondary); }
         .song-play-control { background: transparent; border: none; width: 44px; height: 44px; cursor: pointer; flex-shrink: 0; }
         .song-play-control img { width: 100%; height: 100%; }
-    /* --- PASTE THIS BLOCK TO FINE-TUNE INDIVIDUAL ARROWS (THIS ONE WORKS) --- */
+    /* --- Arrows Pointing DOWN (Move Left/Right with translateX) --- */
 
-/* STEP 1: For "Type your..." bubble. Arrow points from bottom. */
+/* STEP 1: For "Type your..." bubble. */
 .step-userInput.tutorial-arrow-bottom::after {
-  /* This preserves horizontal centering. Add your left/right nudge inside translateX(). */
+  /* 0px means it's perfectly centered. */
   transform: translateX(calc(-50% + 0px)) !important; 
 }
 
-/* -------------------- EDITED HERE (2 of 2) -------------------- */
-/* I've corrected this rule so you can move the arrow left/right. */
-
-/* STEP 2: For "/" bubble. Arrow now points from bottom. */
+/* STEP 2: For "/" bubble. */
 .step-slashBtn.tutorial-arrow-bottom::after {
-  /* This preserves horizontal centering. Add your left/right nudge inside translateX(). */
+  /* +35px moves it 35px to the RIGHT. */
   transform: translateX(calc(-50% + 35px)) !important; 
 }
 
-
-/* STEP 3: For "send button" bubble. Arrow points from bottom. */
+/* STEP 3: For "send button" bubble. */
 .step-sendBtn.tutorial-arrow-bottom::after {
+  /* +95px moves it 95px to the RIGHT. */
   transform: translateX(calc(-50% + 95px)) !important; 
 }
 
-/* STEP 4: For "music note" bubble. Arrow points from top. */
+
+/* --- Arrows Pointing UP (Move Left/Right with translateX) --- */
+
+/* STEP 4: For "music note" bubble. */
 .step-musicBtn.tutorial-arrow-top::after {
+  /* -100px moves it 100px to the LEFT. */
   transform: translateX(calc(-50% + -100px)) !important; 
 }
 
-/* STEP 5: For "chat history" bubble. Arrow points from top. */
+/* STEP 5: For "chat history" bubble. */
 .step-historyBtn.tutorial-arrow-top::after {
-  transform: translateX(calc(-50% + -50px)) !important; 
+  /* -50px moves it 50px to the LEFT. */
+  transform: translateX(calc(-50% + -35px)) !important; 
 }
 
-/* STEP 6: For "new chat" bubble. Arrow points from top. */
+/* STEP 6: For "new chat" bubble. */
 .step-newChatBtn.tutorial-arrow-top::after {
-  transform: translateX(calc(-50% + 50px)) !important; 
+  /* This is an icon on the right, so we use a POSITIVE number to move the arrow RIGHT. */
+  /* EDIT THE "+50px" VALUE TO MOVE IT MORE LEFT OR RIGHT. */
+  transform: translateX(calc(-50% + 35px)) !important; 
 }
 
-/* STEP 7: For "sound toggle" bubble. Arrow points from top. */
-.step-soundToggleBtn.tutorial-arrow-top::after {
-  transform: translateX(calc(-50% + 100px)) !important; 
-}
-
-/* STEP 8: For "help" bubble. Arrow points from top. */
+/* STEP 7 & 8: For the stacked right icons. */
+.step-soundToggleBtn.tutorial-arrow-top::after,
 .step-helpBtn.tutorial-arrow-top::after {
+  /* These icons are on the far right, so they need a larger POSITIVE value. */
+  /* EDIT THE "+100px" VALUE TO TWEAK ALIGNMENT. */
   transform: translateX(calc(-50% + 100px)) !important; 
 }
 
-/* STEP 9: For "chat window" bubble. Arrow points from left. */
+
+/* --- Arrows Pointing LEFT (Move Up/Down with translateY) --- */
+
+/* STEP 9: For "chat window" bubble. */
 .step-chatWindow.tutorial-arrow-left::after {
-  /* This preserves vertical centering. Add your up/down nudge inside translateY(). */
+  /* This arrow points from the left side. To move it UP, use a NEGATIVE number. */
+  /* To move it DOWN, use a POSITIVE number. */
   transform: translateY(calc(-50% + 0px)) !important; 
 }
 /* --- NEW CSS FOR AI BANTER --- */
@@ -839,6 +845,7 @@ const handleFormSubmission = async () => {
 
     ui.userInput.value = '';
     ui.userInput.style.height = 'auto';
+    ui.userInput.blur(); // <-- THIS IS THE NEW LINE THAT HIDES THE KEYBOARD
     ui.typingIndicator.style.display = 'flex';
     scrollToBottom();
 
@@ -858,22 +865,34 @@ const handleFormSubmission = async () => {
         else aiResponseText = smartAssRemarks[Math.floor(Math.random() * smartAssRemarks.length)];
     } else {
         battleHeat += 10;
-        if (analyzeUserVerse(userMessageText) === '💀' || analyzeUserVerse(userMessageText) === '😲') {
+        const userVerseAnalysis = analyzeUserVerse(userMessageText); // <-- NEW: Analyze verse first
+        if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') {
             battleHeat += 15;
         }
 
-        let mood = lastAiMessageMood;
+        let mood = lastAiMessageMood; // Start with mood from emoji reaction, if any
+
+        // If no mood was set by an emoji, let's calculate one
         if (!mood) {
-            if (battleHeat > 100 && Math.random() < 0.75) {
+            // NEW TRIGGER: Immediately get angry if the user is aggressive
+            if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') {
+                mood = 'angry';
+            } 
+            // EASIER TRIGGER: Get 'finish' mood more easily
+            else if (battleHeat > 70 && Math.random() < 0.75) { // <-- CHANGED: Threshold lowered from 100 to 80
                 mood = 'finish';
-            } else if (battleHeat > 60 && Math.random() < 0.6) {
+            } 
+            // EASIER TRIGGER: Get 'angry' mood more easily
+            else if (battleHeat > 30 && Math.random() < 0.7) { // <-- CHANGED: Threshold lowered from 60 to 40, chance increased
                 mood = 'angry';
             }
         }
         
         shortMessageCounter = 0;
+        
+        lastAiMessageMood = mood; // <-- IMPORTANT: Set the mood for the avatar BEFORE the message displays
         aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, mood);
-        lastAiMessageMood = null;
+        lastAiMessageMood = null; // <-- Reset the mood for the next turn
     }
 
     const aiMessageId = Date.now() + 1;
@@ -881,7 +900,7 @@ const handleFormSubmission = async () => {
     saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
     
     ui.chatForm.classList.remove('form-disabled');
-    // We don't need ui.userInput.focus() because focus was never lost.
+    // The keyboard is now hidden. The user must tap the input to bring it back.
 
     const banterChance = 0.35;
     if (userBars.length >= 4 && battleHeat > 30 && Math.random() < banterChance) {
