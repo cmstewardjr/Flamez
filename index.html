@@ -378,7 +378,6 @@ header {
     padding: 8px 15px;
     max-width: fit-content; /* Makes the bubble only as wide as the text */
     align-self: flex-start;
-    margin-left: 50px; /* Aligns it with the main AI message bubble */
 }
 
 .ai-message.scheme-banter {
@@ -626,7 +625,7 @@ header {
         <video autoplay loop muted playsinline class="video-background" id="calmFireVideo_app"><source src="fire_loop_video.mp4" type="video/mp4"></video>
         <video autoplay loop muted playsinline class="video-background hidden-video" id="ragingFireVideo_app"><source src="fire_loop_video_2.mp4" type="video/mp4"></video>
                <video autoplay loop muted playsinline class="video-background hidden-video" id="rainVideo_app"><source src="rain_loop_video.mp4" type="video/mp4"></video>
-        <video autoplay loop muted playsinline class="video-background hidden-video" id="snowVideo_app"><source src="snow_loop_video.mp4" type="video/quicktime"></video>
+        <video autoplay loop muted playsinline class="video-background hidden-video" id="snowVideo_app"><source src="snow_loop_video.mp4" type="video/mp4"></video>
         <header>
             <!-- Left Side Controls -->
             <div class="header-controls left-controls">
@@ -942,6 +941,7 @@ function parseLyrics(lyrics) {
         function initializeChatApp() {
             // Core app state variables
             let shortMessageCounter = 0, lastAiMessageMood = null, battleHeat = 0, battleTurnCounter = 0;
+            let currentAiAvatar = "battle-bot.png"; // NEW: Tracks the current AI avatar
             let achievementQueue = [];
 
             // UI Elements Cache
@@ -1198,19 +1198,21 @@ function parseLyrics(lyrics) {
             if (window.visualViewport) { window.visualViewport.addEventListener('resize', () => { if (document.activeElement === ui.userInput) { setTimeout(() => { ui.chatForm.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 100); } }); }
 
             const handleFormSubmission = async () => {
-                if (document.activeElement) { document.activeElement.blur(); }
+                if (document.activeElement) document.activeElement.blur();
                 if (ui.chatForm.classList.contains('form-disabled')) return;
+
                 const userMessageText = ui.userInput.value.trim();
                 if (userMessageText === '') return;
 
-
                 ui.chatForm.classList.add('form-disabled');
                 playSound(sounds.click);
+
                 const userMessageId = Date.now();
                 displayMessage(userMessageText, 'user', userMessageId);
                 saveMessage({ sender: 'user', text: userMessageText, id: userMessageId });
                 ui.userInput.value = '';
                 ui.userInput.style.height = 'auto';
+
                 ui.typingIndicator.style.display = 'flex';
                 scrollToBottom();
                 
@@ -1223,77 +1225,92 @@ function parseLyrics(lyrics) {
                 const finalDelay = baseDelay + dynamicDelay + (Math.random() * 500);
                 await new Promise(resolve => setTimeout(resolve, finalDelay));
                 ui.typingIndicator.style.display = 'none';
+                
                 let aiResponseText;
+                const userVerseAnalysis = analyzeUserVerse(userMessageText);
 
-                if (userBars.length < 4 && lastAiMessageMood !== 'finish') {
+                if (userBars.length < 4 && window.lastAiMessageMood !== 'finish') {
+                    currentAiAvatar = "battle-bot.png"; // Keep normal avatar for short replies
+                    switchBackgroundVideo('calmFireVideo_app');
                     shortMessageCounter++;
                     if (shortMessageCounter === 3) aiResponseText = "Please provide 4 or more bars to even be a challenge worth the competition.";
                     else if (shortMessageCounter === 6) aiResponseText = "Seriously, give me something to work with. I need 4 or more bars or this is just a waste of my processing power.";
                     else aiResponseText = smartAssRemarks[Math.floor(Math.random() * smartAssRemarks.length)];
                 } else {
                     battleHeat += 10;
-                    const userVerseAnalysis = analyzeUserVerse(userMessageText);
-                    if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') { battleHeat += 15; }
-                    let mood = lastAiMessageMood;
-                    if (!mood) {
-                        if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') { mood = 'angry'; } 
-                        else if (battleHeat > 80 && Math.random() < 0.75) { mood = 'finish'; } 
-                        else if (battleHeat > 40 && Math.random() < 0.7) { mood = 'angry'; }
+                    if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') battleHeat += 15;
+
+                    // --- NEW MOOD AND AVATAR LOGIC ---
+                    let mood = window.lastAiMessageMood; // Check for reaction from user first
+                    window.lastAiMessageMood = null; // Reset after checking
+
+                    if (!mood) { // If no reaction, determine mood based on verse
+                        if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') mood = 'angry';
+                        else if (battleHeat > 80 && Math.random() < 0.75) mood = 'finish';
+                        else if (battleHeat > 40 && Math.random() < 0.7) mood = 'angry';
+                        else if (userVerseAnalysis === '🤔') mood = 'complex';
                     }
-                    shortMessageCounter = 0;
-                    // --- THIS IS THE AI MOOD-TO-VIDEO LOGIC ---
-                    // You can change which mood triggers which video right here.
+                    
+                    // Set avatar and video based on the final mood
                     switch (mood) {
                         case "angry":
                         case "finish":
+                            currentAiAvatar = "battle-bot-4.png"; // <-- THIS LINE IS NOW CORRECT
                             switchBackgroundVideo('ragingFireVideo_app');
                             break;
                         case "complex":
+                            currentAiAvatar = "battle-bot.png";
                             switchBackgroundVideo('rainVideo_app');
                             break;
                         case "arrogant":
+                            currentAiAvatar = "battle-bot.png";
                             switchBackgroundVideo('snowVideo_app');
                             break;
                         default:
-                            // If the mood is anything else (or null), it goes back to calm.
+                            currentAiAvatar = "battle-bot.png";
                             switchBackgroundVideo('calmFireVideo_app');
                             break;
                     }
-                    // --- ADD THESE TWO LINES TO FIX THE CRASH ---
+                    // --- END NEW LOGIC ---
+
+                    shortMessageCounter = 0;
                     aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, mood);
-                    lastAiMessageMood = null; 
                 }
                 const aiMessageId = Date.now() + 1;
                 displayMessage(aiResponseText, 'ai', aiMessageId);
                 saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
-                ui.chatForm.classList.remove('form-disabled');
 
+                // --- NEW BANTER LOGIC ---
                 const rhymeScheme = analyzeRhymeScheme(userMessageText);
-                const banterChance = 0.35;
+                let banterText = null;
+                let banterType = null;
+                
                 if (rhymeScheme && rhymeScheme !== 'messy') {
-                    const schemeBanter = `That ${rhymeScheme} scheme... Not bad, I see you.`;
-                     setTimeout(() => {
-                        const banterId = Date.now() + 2;
-                        displayMessage(schemeBanter, 'ai', banterId, null, true, 'scheme-banter');
-                        saveMessage({ sender: 'ai', text: schemeBanter, id: banterId, reaction: null });
-                    }, aiResponseText.length * 40 + 500);
+                    banterText = `That ${rhymeScheme} scheme... Not bad, I see you.`;
+                    banterType = 'scheme-banter';
+                } else if (userBars.length >= 4 && Math.random() < (battleHeat / 200)) { // Chance increases with battle heat
+                    const standardBanter = ["Your turn.", "Easy work.", "Top that.", "Let's see what you got."];
+                    const dismissiveBanter = ["Is that all?", "Barely a warm-up.", "Weak."];
+                    const challengingBanter = ["Okay, you got my attention.", "That's the energy I want to see."];
+
+                    if (userVerseAnalysis === '😂') banterText = dismissiveBanter[Math.floor(Math.random() * dismissiveBanter.length)];
+                    else if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') banterText = challengingBanter[Math.floor(Math.random() * challengingBanter.length)];
+                    else banterText = standardBanter[Math.floor(Math.random() * standardBanter.length)];
                 }
-                else if (userBars.length >= 4 && battleHeat > 30 && Math.random() < banterChance) {
-                    const banterLines = ["Your turn.", "Easy work.", "Top that.", "Let's see what you got.", "That's how it's done."];
-                    const banterText = banterLines[Math.floor(Math.random() * banterLines.length)];
+
+                if (banterText) {
                     setTimeout(() => {
                         const banterId = Date.now() + 2;
-                        displayMessage(banterText, 'ai', banterId, null, true);
+                        displayMessage(banterText, 'ai', banterId, null, true, banterType);
                         saveMessage({ sender: 'ai', text: banterText, id: banterId, reaction: null });
-                    }, aiResponseText.length * 40 + 500);
+                    }, aiResponseText.length * 40 + 500); // Delay banter slightly
                 }
-
-                setTimeout(() => {
-                    const aiReaction = analyzeUserVerse(userMessageText);
-                    if (aiReaction) addReactionToMessage(userMessageId, aiReaction);
-                }, 500);
+                // --- END NEW BANTER LOGIC ---
+                
+                setTimeout(() => { if (userVerseAnalysis) addReactionToMessage(userMessageId, userVerseAnalysis); }, 500);
+                ui.chatForm.classList.remove('form-disabled');
             };
-
+            
             ui.sendBtn.addEventListener('click', handleFormSubmission);
             
             // Initial load of the app
@@ -1305,38 +1322,36 @@ function parseLyrics(lyrics) {
             messageWrapper.id = `msg-${id}`;
             messageWrapper.classList.add("message-wrapper", `${sender}-wrapper`);
 
-            // This is the key change: Check for the special ID
-            if (id === 'welcome-message-0') {
-                messageWrapper.classList.add("welcome-wrapper");
-            } else if (!isBanter) { // Regular messages get an avatar
+            // NEW LOGIC: Add avatar to every message except the centered welcome message.
+            if (id !== 'welcome-message-0') {
                 const avatar = document.createElement("img");
                 avatar.classList.add("chat-avatar");
-                avatar.src = sender === 'user' ? "ac.png" : "battle-bot.png";
+                // Use the correct avatar for the user or the AI (including angry state)
+                avatar.src = sender === 'user' ? "ac.png" : currentAiAvatar;
                 messageWrapper.appendChild(avatar);
+            } else {
+                messageWrapper.classList.add("welcome-wrapper");
             }
 
             const messageEl = document.createElement("div");
             messageEl.classList.add("message", `${sender}-message`);
 
-            // Apply special styling classes based on type
+            // Apply special styling for different message types
             if (id === 'welcome-message-0') {
                 messageEl.classList.add("welcome-message");
             } else if (isBanter) {
                 messageEl.classList.add('banter-message');
-                if (banterType === 'scheme-banter') {
-                    messageEl.classList.add('scheme-banter');
-                }
+                if (banterType === 'scheme-banter') messageEl.classList.add('scheme-banter');
             } else {
                 messageEl.classList.add("new-message-glow");
             }
             
             messageWrapper.appendChild(messageEl);
-            const chatWindow = document.getElementById('chatWindow');
-            chatWindow.insertBefore(messageWrapper, document.getElementById('typingIndicator'));
+            document.getElementById('chatWindow').insertBefore(messageWrapper, document.getElementById('typingIndicator'));
 
-            // Animation logic for AI text (unchanged)
+            // Animation logic for main AI responses
             if (sender === 'ai' && !isBanter && id !== 'welcome-message-0' && !isInitialLoad) {
-                 const words = text.replace(/\s\/\s/g, ' / ').split(' ');
+                const words = text.replace(/\s\/\s/g, ' / ').split(' ');
                 let i = 0;
                 function animateWords() {
                     if (i < words.length) {
@@ -1346,40 +1361,65 @@ function parseLyrics(lyrics) {
                             messageEl.innerHTML += '<br>';
                             delay = 400;
                         } else {
-                            messageEl.innerHTML += (i > 0 && words[i - 1] !== '/' ? ' ' : '') + word;
+                            messageEl.innerHTML += (i > 0 && words[i-1] !== '/' ? ' ' : '') + word;
                         }
                         scrollToBottom();
                         i++;
                         setTimeout(animateWords, delay);
-                    } else {
-                        if (!text.includes("Please provide")) {
-                            createReactionUI(messageWrapper, id, reaction);
-                            messageEl.classList.remove('new-message-glow');
-                        }
+                    } else if (!text.includes("Please provide")) {
+                        createReactionUI(messageWrapper, id, reaction);
+                        messageEl.classList.remove('new-message-glow');
                     }
                 }
                 animateWords();
             } else {
-                // For user messages, welcome message, and initial load
+                // Logic for user messages, banter, and initial load
                 messageEl.innerHTML = text.replace(/\s\/\s/g, "<br>").replace(/[.\n]/g, "<br>");
-                if (sender === 'user') {
-                    createReactionPlaceholder(messageWrapper, id);
-                }
-                if (sender === 'ai' && !isBanter && id !== 'welcome-message-0' && !text.includes("Please provide")) {
-                    createReactionUI(messageWrapper, id, reaction);
+                if (sender === 'user') createReactionPlaceholder(messageWrapper, id);
+                if (sender === 'ai' && id !== 'welcome-message-0' && !isBanter) {
+                    if (!text.includes("Please provide")) createReactionUI(messageWrapper, id, reaction);
                 }
             }
             
-            // Scroll logic (unchanged)
-            if (isInitialLoad) {
-                setTimeout(() => scrollToBottom(), 50);
-            } else {
-                scrollToBottom();
-            }
+            if (isInitialLoad) setTimeout(() => scrollToBottom(), 50);
+            else scrollToBottom();
         }
         function createReactionPlaceholder(t,e){const s=document.createElement("div");s.className="reaction-container",s.id=`reaction-container-${e}`,t.appendChild(s)}
         function createReactionUI(t,e,s){const a=document.createElement("div");a.className="reaction-container";const i=document.createElement("div");i.className="reaction-capsule";const n=document.createElement("div");n.className="reaction-button";const d=document.createElement("div");d.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-3-3h6v-2H9v2zm.5-4h5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-5c-.28 0-.5.22-.5.5s.22.5.5.5z"/></svg>';const o=document.createElement("div");o.className="emoji-display",n.appendChild(d),n.appendChild(o),n.onclick=t=>{t.stopPropagation(),i.classList.toggle("expanded"),document.body.addEventListener("click",()=>i.classList.remove("expanded"),{once:!0})},["😂","🤔","😲","💀"].forEach(t=>{const s=document.createElement("span");s.textContent=t,s.onclick=a=>{a.stopPropagation(),setReaction(t,d,o,i,e)},i.appendChild(s)}),a.appendChild(i),a.appendChild(n),t.appendChild(a),s&&setReaction(s,d,o,i,e,!1)}
-        function setReaction(t,e,s,a,i,n=!0){n&&document.getElementById('clickSound').play();e.style.display="none",s.style.display="block",s.textContent=t,a.classList.remove("expanded");let mood;switch(t){case"😂":mood="angry";break;case"🤔":mood="complex";break;case"😲":mood="arrogant";break;case"💀":mood="finish";break}window.lastAiMessageMood=mood;const d=getStorage();const o=d.currentSession.findIndex(t=>t.id===i);o>-1&&(d.currentSession[o].reaction=t,saveStorage(d))}
+        function setReaction(emoji, iconElement, emojiDisplay, capsule, messageId, playSound = true) {
+            if (playSound) document.getElementById('clickSound').play();
+            
+            iconElement.style.display = "none";
+            emojiDisplay.style.display = "block";
+            emojiDisplay.textContent = emoji;
+            capsule.classList.remove("expanded");
+
+            let nextMood = null;
+            switch (emoji) {
+                case "😂": // User laughs at the AI
+                    nextMood = "angry";
+                    break;
+                case "🤔":
+                    nextMood = "complex";
+                    break;
+                case "😲":
+                    nextMood = "arrogant";
+                    break;
+                case "💀": // User uses the "dead" emoji
+                    nextMood = "finish";
+                    break;
+            }
+            // This global variable tells the AI how to feel on its NEXT turn
+            window.lastAiMessageMood = nextMood; 
+
+            // Save the reaction to the message history
+            const storage = getStorage();
+            const messageIndex = storage.currentSession.findIndex(msg => msg.id === messageId);
+            if (messageIndex > -1) {
+                storage.currentSession[messageIndex].reaction = emoji;
+                saveStorage(storage);
+            }
+        }
         function addReactionToMessage(messageId, reactionEmoji) {
             const container = document.getElementById(`reaction-container-${messageId}`);
             if (container) {
@@ -1399,7 +1439,28 @@ function parseLyrics(lyrics) {
                 }
             }
         }
-        function analyzeUserVerse(t){const e=t.toLowerCase(),s=t.split(/\s+/).length;if(["kill","dead","die","grave","funeral","gun","shoot","knife","blade","body","coffin","casket","blood","blast"].some(t=>e.includes(t)))return"💀";if(["fuck","shit","bitch","asshole","damn"].some(t=>e.includes(t)))return"😲";if(t.length>250||/\w{10,}/.test(e))return"🤔";if(s<6)return"😂";return null}
+        function analyzeUserVerse(text) {
+            const lowerCaseText = text.toLowerCase();
+            const wordCount = text.split(/\s+/).length;
+
+            // List of words that imply violence or death
+            const deadWords = ["kill", "dead", "die", "grave", "funeral", "gun", "shoot", "knife", "blade", "body", "coffin", "casket", "blood", "blast", "murder", "slaughter"];
+            if (deadWords.some(word => lowerCaseText.includes(word))) {
+                return "💀"; // AI gets offended by threats
+            }
+
+            // Expanded list of swear words
+            const swearWords = ["fuck", "shit", "bitch", "asshole", "damn", "crap", "piss", "hell"];
+            if (swearWords.some(word => lowerCaseText.includes(word))) {
+                return "😲"; // AI gets offended by swearing
+            }
+
+            // Existing logic for other reactions
+            if (text.length > 250 || /\w{10,}/.test(lowerCaseText)) return "🤔";
+            if (wordCount < 6) return "😂";
+            
+            return null; // No specific reaction
+        }
         function getStorage(){return JSON.parse(localStorage.getItem("flamezChatStorageV2"))||{sessions:[],currentSession:[]}}
         function saveStorage(s){localStorage.setItem("flamezChatStorageV2",JSON.stringify(s))}
         function saveMessage(t){const s=getStorage();s.currentSession.push(t),saveStorage(s)}
