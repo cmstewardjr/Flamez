@@ -625,7 +625,8 @@ header {
         <div class="app-container">
         <video autoplay loop muted playsinline class="video-background" id="calmFireVideo_app"><source src="fire_loop_video.mp4" type="video/mp4"></video>
         <video autoplay loop muted playsinline class="video-background hidden-video" id="ragingFireVideo_app"><source src="fire_loop_video_2.mp4" type="video/mp4"></video>
-       
+               <video autoplay loop muted playsinline class="video-background hidden-video" id="rainVideo_app"><source src="rain_loop_video.mp4" type="video/mp4"></video>
+        <video autoplay loop muted playsinline class="video-background hidden-video" id="snowVideo_app"><source src="snow_loop_video.mov" type="video/mp4"></video>
         <header>
             <!-- Left Side Controls -->
             <div class="header-controls left-controls">
@@ -961,6 +962,8 @@ function parseLyrics(lyrics) {
                 themeSongControl: document.getElementById('themeSongControl'),
                 calmFire_app: document.getElementById('calmFireVideo_app'),
                 ragingFire_app: document.getElementById('ragingFireVideo_app'),
+                rainVideo_app: document.getElementById('rainVideo_app'),
+                snowVideo_app: document.getElementById('snowVideo_app'),
                 achievementsBtn: document.getElementById('achievementsBtn'),
                 achievementsOverlay: document.getElementById('achievementsOverlay'),
                 achievementsContent: document.getElementById('achievementsContent'),
@@ -1131,7 +1134,23 @@ function parseLyrics(lyrics) {
             
             // --- Helper Functions ---
             const playSound = (sound) => { if (!sounds.click.muted && sounds.theme.paused) { sound.currentTime = 0; sound.play().catch(e => console.log("Sound play failed:", e)); } };
-            function switchBackground(switchToRaging) { if (switchToRaging && !isRaging) { isRaging = true; ui.calmFire_app.classList.add('hidden-video'); ui.ragingFire_app.classList.remove('hidden-video'); } else if (!switchToRaging && isRaging) { isRaging = false; ui.calmFire_app.classList.remove('hidden-video'); ui.ragingFire_app.classList.add('hidden-video'); } }
+            function switchBackgroundVideo(targetId) {
+                // This is our list of all possible background videos
+                const allVideos = [ui.calmFire_app, ui.ragingFire_app, ui.rainVideo_app, ui.snowVideo_app];
+
+                // We loop through every video
+                allVideos.forEach(video => {
+                    if (video.id === targetId) {
+                        // If this video is the one we WANT to show, we remove the hidden class.
+                        // The CSS transition will make it fade in smoothly.
+                        video.classList.remove('hidden-video');
+                    } else {
+                        // For all other videos, we ADD the hidden class.
+                        // The CSS transition will make them fade out smoothly.
+                        video.classList.add('hidden-video');
+                    }
+                });
+            }
             function doWordsRhyme(word1, word2) { if (!word1 || !word2 || word1 === word2) return false; const minLength = 2; if (word1.length <= minLength || word2.length <= minLength) return false; return word1.slice(-3) === word2.slice(-3); }
             function analyzeRhymeScheme(text) { const bars = text.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 5); if (bars.length < 4) return null; const lastWords = bars.map(bar => bar.split(' ').pop().replace(/[.,?!]/g, '').toLowerCase()); if (doWordsRhyme(lastWords[0], lastWords[1]) && doWordsRhyme(lastWords[2], lastWords[3])) { return 'AABB'; } if (doWordsRhyme(lastWords[0], lastWords[2]) && doWordsRhyme(lastWords[1], lastWords[3])) { return 'ABAB'; } return 'messy'; }
 
@@ -1222,10 +1241,24 @@ function parseLyrics(lyrics) {
                         else if (battleHeat > 40 && Math.random() < 0.7) { mood = 'angry'; }
                     }
                     shortMessageCounter = 0;
-                    lastAiMessageMood = mood;
-                    if (mood === 'angry' || mood === 'finish') { switchBackground(true); }
-                    aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, mood);
-                    lastAiMessageMood = null;
+                    // --- THIS IS THE AI MOOD-TO-VIDEO LOGIC ---
+                    // You can change which mood triggers which video right here.
+                    switch (mood) {
+                        case "angry":
+                        case "finish":
+                            switchBackgroundVideo('ragingFireVideo_app');
+                            break;
+                        case "complex":
+                            switchBackgroundVideo('rainVideo_app');
+                            break;
+                        case "arrogant":
+                            switchBackgroundVideo('snowVideo_app');
+                            break;
+                        default:
+                            // If the mood is anything else (or null), it goes back to calm.
+                            switchBackgroundVideo('calmFireVideo_app');
+                            break;
+                    }
                 }
                 const aiMessageId = Date.now() + 1;
                 displayMessage(aiResponseText, 'ai', aiMessageId);
