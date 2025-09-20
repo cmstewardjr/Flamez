@@ -626,7 +626,7 @@ header {
         <video autoplay loop muted playsinline class="video-background" id="calmFireVideo_app"><source src="fire_loop_video.mp4" type="video/mp4"></video>
         <video autoplay loop muted playsinline class="video-background hidden-video" id="ragingFireVideo_app"><source src="fire_loop_video_2.mp4" type="video/mp4"></video>
                <video autoplay loop muted playsinline class="video-background hidden-video" id="rainVideo_app"><source src="rain_loop_video.mp4" type="video/mp4"></video>
-        <video autoplay loop muted playsinline class="video-background hidden-video" id="snowVideo_app"><source src="snow_loop_video.mov" type="video/mp4"></video>
+        <video autoplay loop muted playsinline class="video-background hidden-video" id="snowVideo_app"><source src="snow_loop_video.mp4" type="video/quicktime"></video>
         <header>
             <!-- Left Side Controls -->
             <div class="header-controls left-controls">
@@ -1259,6 +1259,9 @@ function parseLyrics(lyrics) {
                             switchBackgroundVideo('calmFireVideo_app');
                             break;
                     }
+                    // --- ADD THESE TWO LINES TO FIX THE CRASH ---
+                    aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, mood);
+                    lastAiMessageMood = null; 
                 }
                 const aiMessageId = Date.now() + 1;
                 displayMessage(aiResponseText, 'ai', aiMessageId);
@@ -1410,7 +1413,7 @@ function parseLyrics(lyrics) {
             // Define the welcome message as a data object
             const welcomeMessage = {
                 sender: 'ai',
-                text: "End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez: AI start the fight.",
+                text: "End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez AI start the fight.",
                 id: 'welcome-message-0', // A static, unique ID to identify it
                 reaction: null
             };
