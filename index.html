@@ -32,9 +32,15 @@
             background: url('battle-bot-3.png') no-repeat center center;
             background-size: cover; opacity: 0.8; z-index: 1;
         }
-        .video-background {
+                .video-background {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            min-width: 100%; min-height: 100%; width: auto; height: auto; z-index: 0; opacity: 0.35;
+            min-width: 100%; min-height: 100%; width: auto; height: auto; z-index: 0; 
+            opacity: 0.35;
+            transition: opacity 1s ease-in-out; /* This creates the smooth fade */
+        }
+        .hidden-video {
+            opacity: 0 !important; /* Use important to ensure it stays hidden */
+            pointer-events: none; /* Prevents interaction with the hidden video */
         }
         .startup-logo-container, .startup-buttons { z-index: 2; }
         
@@ -112,52 +118,90 @@
         }
         .app-container > .video-background { z-index: 0; opacity: 0.2; }
 
-/* --- PASTE THIS ENTIRE BLOCK TO FIX THE HEADER ALIGNMENT --- */
+.welcome-wrapper { 
+    align-self: center; 
+    justify-content: center; 
+    width: 85%; 
+}
+.ai-message.welcome-message { 
+    cursor: default; 
+    background: none; 
+    border: 1px dashed var(--text-secondary); 
+    padding: 10px; 
+    box-shadow: none; 
+    text-shadow: none; 
+    text-align: center; 
+    color: rgba(255, 255, 255, 0.7); 
+    max-width: 100%; 
+    border-radius: 25px; 
+}
+.ai-message.welcome-message::after { 
+    display: none; /* Hides the glossy overlay */
+}       
 header {
-    flex-shrink: 0; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: flex-end;
-    
-    height: 140px; /* <-- EDIT THIS VALUE to control the header's height directly */
-    
-    padding: 0 15px; 
-     background: linear-gradient(to top, #2d2d2d, #0d0d0d); 
-    
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Aligns items to the bottom */
+    height: 140px;
+    padding: 0 15px;
+    background: linear-gradient(to top, #2d2d2d, #0d0d0d);
     border-top: 3px solid var(--user-bubble);
-    position: relative; 
-    z-index: 2; 
+    position: relative;
+    z-index: 2;
     box-shadow: 0px 4px 15px -3px var(--primary-color);
 }
-.header-logo-container { flex-grow: 1; text-align: center; padding-bottom: -200px; }/* EDITED */
-.header-logo { 
-    height: 175px; 
-    vertical-align: middle; 
-    position: relative; /* This "unlocks" the element for moving */
-    top: 25px;          /* THIS IS THE VALUE YOU EDIT TO SLIDE THE LOGO DOWN! */
-}
-.header-controls { display: flex; align-items: center; gap: 15px; flex-shrink: 0; padding-bottom: 10px; } /* EDITED */
-.header-controls.left-controls { justify-content: flex-start; }
-/* THIS IS THE NEW, CORRECTED CSS FOR THE RIGHT-SIDE ICONS */
-.header-controls.right-controls {
-    display: flex;
-    align-items: flex-end; 
-    gap: 15px; /* Adjust this to change space between "New Chat" and the stack */
-}
-    .right-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-        #newChatBtn { grid-area: new; } #soundToggleBtn { grid-area: sound; } #helpBtn { grid-area: help; }
 
-       #soundToggleBtn, #musicBtn, #historyBtn, #newChatBtn, #helpBtn { background: transparent; border: none; cursor: pointer; padding: 0; width: 44px; height: 44px; }
+.header-logo-container {
+    flex-grow: 1;
+    text-align: center;
+}
+
+.header-logo {
+    height: 175px;
+    vertical-align: middle;
+    position: relative;
+    top: 25px; /* Slides the logo down */
+}
+
+.header-controls {
+    display: flex;
+    align-items: center; /* Vertically centers the content */
+    gap: 15px;
+    flex-shrink: 0;
+    padding-bottom: 10px; /* Adds space from the bottom edge of the header */
+}
+
+.icon-stack {
+    display: flex;
+    flex-direction: column; /* This is the key fix to stack icons */
+    gap: 8px; /* Space between the stacked icons */
+}
+
+       #soundToggleBtn, #musicBtn, #historyBtn, #newChatBtn, #helpBtn, #achievementsBtn { background: transparent; border: none; cursor: pointer; padding: 0; width: 44px; height: 44px; }
         #soundToggleBtn img, #newChatBtn img, #helpBtn svg { width: 100%; height: 100%; }
-        #musicBtn img, #historyBtn img { width: 100%; height: 100%; border-radius: 50%;}
+        #musicBtn img, #historyBtn img, #achievementsBtn img { width: 100%; height: 100%; border-radius: 50%;}
         .hidden { display: none; }
         
-        .chat-window { flex-grow: 1; padding: 20px 12px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; position: relative; z-index: 1; background-color: transparent; scrollbar-width: thin; scrollbar-color: #FFC107 transparent; }
-        .chat-window::-webkit-scrollbar { width: 8px; } .chat-window::-webkit-scrollbar-track { background: transparent; } .chat-window::-webkit-scrollbar-thumb { background-color: #FFC107; border-radius: 10px; } .chat-window::-webkit-scrollbar-thumb:hover { background-color: #FFEB3B; }
+        .chat-window { 
+            flex-grow: 1; 
+            padding: 20px 12px; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            scroll-behavior: smooth; 
+            position: relative; 
+            z-index: 1; 
+            background-color: transparent; 
+            scrollbar-width: thin; 
+            scrollbar-color: #FFC107 transparent; 
+        }
+        .chat-window::-webkit-scrollbar { width: 8px; } 
+        .chat-window::-webkit-scrollbar-track { background: transparent; } 
+        .chat-window::-webkit-scrollbar-thumb { background-color: #FFC107; border-radius: 10px; } 
+        .chat-window::-webkit-scrollbar-thumb:hover { background-color: #FFEB3B; }
         .message-wrapper { position: relative; display: flex; align-items: flex-end; gap: 10px; max-width: 90%; opacity: 0; transform: translateY(20px); animation: fadeIn 0.5s forwards; margin-bottom: 10px; }
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         .chat-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; box-shadow: 1px 1px 5px rgba(0,0,0,0.7); }
@@ -226,9 +270,9 @@ header {
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 998; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background-color: var(--surface-color); padding: 30px; border-radius: 15px; color: white; text-align: center; border: 1px solid var(--ai-bubble); max-width: 90%; overflow-x: hidden; }
         .modal-content h1 { font-family: 'Bebas Neue', cursive; font-size: 2.5rem; letter-spacing: 2px; } .modal-content p { margin-top: 10px; }
-        #backBtn, #historyBackBtn, .confirm-btn { font-family: 'Bebas Neue', cursive; font-size: 1.5rem; letter-spacing: 2px; color: white; border: none; border-radius: 10px; padding: 10px 40px; cursor: pointer; margin-top: 30px; }
+        #backBtn, #historyBackBtn, .confirm-btn { font-family: 'Bebas Neue', cursive; font-size: 1.5rem; letter-spacing: 2px; color: white; border: none; border-radius: 10px; padding: 10px 40px; cursor: pointer; margin-top: 30px; text-shadow: var(--text-outline); }
         #confirmBtnWrapper { display: flex; gap: 15px; justify-content: center;} #confirmYesBtn, #tutorialYesBtn, #musicContinueYesBtn { background: var(--fire-gradient); }
-        #confirmNoBtn, #backBtn, #historyBackBtn, #tutorialNoBtn, #musicContinueNoBtn { background: var(--blue-flame-gradient); }
+        #confirmNoBtn, #backBtn, #historyBackBtn, #tutorialNoBtn, #musicContinueNoBtn, #achievementsBackBtn, #detailBackBtn { background: var(--blue-flame-gradient); }
         #historyContent {
     margin-top: 20px;
     text-align: left;
@@ -279,64 +323,48 @@ header {
         .song-info p { margin: 5px 0 0; font-size: 0.9rem; color: var(--text-secondary); }
         .song-play-control { background: transparent; border: none; width: 44px; height: 44px; cursor: pointer; flex-shrink: 0; }
         .song-play-control img { width: 100%; height: 100%; }
-    /* --- Arrows Pointing DOWN (Move Left/Right with translateX) --- */
+    /* --- ARROW POSITIONING FOR TUTORIAL --- */
 
-/* STEP 1: For "Type your..." bubble. */
+/* --- Arrows Pointing DOWN (Bottom Bar) --- */
 .step-userInput.tutorial-arrow-bottom::after {
-  /* 0px means it's perfectly centered. */
-  transform: translateX(calc(-50% + 0px)) !important; 
+  transform: translateX(calc(-50% + 0px)) !important;
 }
-
-/* STEP 2: For "/" bubble. */
 .step-slashBtn.tutorial-arrow-bottom::after {
-  /* +35px moves it 35px to the RIGHT. */
-  transform: translateX(calc(-50% + 35px)) !important; 
+  transform: translateX(calc(-50% + 35px)) !important;
 }
-
-/* STEP 3: For "send button" bubble. */
 .step-sendBtn.tutorial-arrow-bottom::after {
-  /* +95px moves it 95px to the RIGHT. */
-  transform: translateX(calc(-50% + 95px)) !important; 
+  transform: translateX(calc(-50% + 95px)) !important;
 }
 
+/* --- Arrows Pointing UP (Header Bar) --- */
 
-/* --- Arrows Pointing UP (Move Left/Right with translateX) --- */
-
-/* STEP 4: For "music note" bubble. */
+/* The two left-stacked icons share the same horizontal position */
+.step-achievementsBtn.tutorial-arrow-top::after,
 .step-musicBtn.tutorial-arrow-top::after {
-  /* -100px moves it 100px to the LEFT. */
-  transform: translateX(calc(-50% + -100px)) !important; 
+  /* They are far to the left, so they need a large NEGATIVE value */
+  transform: translateX(calc(-50% - 110px)) !important; 
 }
 
-/* STEP 5: For "chat history" bubble. */
+/* This icon is now further to the left */
 .step-historyBtn.tutorial-arrow-top::after {
-  /* -50px moves it 50px to the LEFT. */
-  transform: translateX(calc(-50% + -35px)) !important; 
+  transform: translateX(calc(-50% - 45px)) !important; 
 }
 
-/* STEP 6: For "new chat" bubble. */
+/* This icon is now further to the right */
 .step-newChatBtn.tutorial-arrow-top::after {
-  /* This is an icon on the right, so we use a POSITIVE number to move the arrow RIGHT. */
-  /* EDIT THE "+50px" VALUE TO MOVE IT MORE LEFT OR RIGHT. */
-  transform: translateX(calc(-50% + 35px)) !important; 
+  transform: translateX(calc(-50% + 45px)) !important; 
 }
 
-/* STEP 7 & 8: For the stacked right icons. */
-.step-soundToggleBtn.tutorial-arrow-top::after,
-.step-helpBtn.tutorial-arrow-top::after {
-  /* These icons are on the far right, so they need a larger POSITIVE value. */
-  /* EDIT THE "+100px" VALUE TO TWEAK ALIGNMENT. */
-  transform: translateX(calc(-50% + 100px)) !important; 
+/* The two right-stacked icons share the same horizontal position */
+.step-helpBtn.tutorial-arrow-top::after,
+.step-soundToggleBtn.tutorial-arrow-top::after {
+  /* They are far to the right, so they need a large POSITIVE value */
+  transform: translateX(calc(-50% + 110px)) !important;
 }
 
-
-/* --- Arrows Pointing LEFT (Move Up/Down with translateY) --- */
-
-/* STEP 9: For "chat window" bubble. */
+/* --- Arrows Pointing LEFT (Main Chat Area) --- */
 .step-chatWindow.tutorial-arrow-left::after {
-  /* This arrow points from the left side. To move it UP, use a NEGATIVE number. */
-  /* To move it DOWN, use a POSITIVE number. */
-  transform: translateY(calc(-50% + 0px)) !important; 
+  transform: translateY(calc(-50% + 0px)) !important;
 }
 /* --- NEW CSS FOR AI BANTER --- */
 .ai-message.banter-message {
@@ -353,8 +381,10 @@ header {
     margin-left: 50px; /* Aligns it with the main AI message bubble */
 }
 
-.banter-message::after {
-    display: none; /* No glossy highlight on banter */
+.ai-message.scheme-banter {
+    border-color: var(--user-bubble); /* A different color to stand out */
+    box-shadow: 0 0 10px var(--user-bubble);
+    color: #90e0ef;
 }
 .chat-form.form-disabled {
     opacity: 0.5;
@@ -399,19 +429,183 @@ header {
 }
 
 .delete-history-btn:hover {
-    transform: scale(1.1);
-    filter: brightness(1.5); /* Use a filter for hover feedback instead of color */
+    transform: scale(1.2);
+    filter: brightness(1.5);
+}
+/* --- ACHIEVEMENT STYLES (THEME ENHANCED) --- */
+#achievementsBtn {
+    position: relative;
+}
+.notification-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    border: 2px solid var(--surface-color);
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 69, 0, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 10px 5px rgba(255, 69, 0, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 69, 0, 0); }
 }
 
-.delete-history-btn:hover {
-    color: var(--primary-color);
-    transform: scale(1.2);
+/* Make the modal itself match the theme */
+#achievementsOverlay .modal-content {
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 25px rgba(255, 69, 0, 0.4);
+}
+#achievementsOverlay .modal-content h1 {
+    text-shadow: 0 0 8px var(--primary-color);
+}
+
+/* The scrollable grid area */
+#achievementsContent {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 20px; /* Increased padding */
+    background-color: rgba(0, 0, 0, 0.2); /* Subtle background */
+    border-radius: 10px;
+    /* Themed scrollbar to match chat window */
+    scrollbar-width: thin; 
+    scrollbar-color: var(--secondary-color) transparent;
+}
+#achievementsContent::-webkit-scrollbar { width: 8px; } 
+#achievementsContent::-webkit-scrollbar-track { background: transparent; } 
+#achievementsContent::-webkit-scrollbar-thumb { background-color: var(--secondary-color); border-radius: 10px; } 
+#achievementsContent::-webkit-scrollbar-thumb:hover { background-color: #FFEB3B; }
+
+
+/* Styling for each individual achievement box */
+.achievement-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Style for the icon itself */
+.achievement-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    transition: filter 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+    border: 2px solid var(--ai-bubble); /* Default border */
+}
+
+/* --- LOCKED State --- */
+.achievement-item .achievement-icon {
+    filter: grayscale(20%) brightness(1.0);
+    opacity: 1.0;
+}
+.achievement-name {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* --- UNLOCKED State --- */
+.achievement-item.unlocked {
+    cursor: pointer;
+}
+.achievement-item.unlocked:hover {
+    background-color: rgba(255, 255, 255, 0.05); /* Highlight on hover */
+}
+.achievement-item.unlocked .achievement-icon {
+    filter: none;
+    opacity: 1;
+    border: 2px solid var(--secondary-color); /* Bright border */
+    box-shadow: 0 0 15px var(--secondary-color); /* Key glowing effect */
+}
+.achievement-item.unlocked:hover .achievement-icon {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px var(--primary-color); /* Enhance glow on hover */
+}
+.achievement-item.unlocked .achievement-name {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+
+/* --- UNLOCK MODAL STYLES --- */
+.unlock-content {
+    cursor: pointer;
+}
+#unlockIconWrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 20px auto;
+}
+#unlockIcon {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#unlockIcon.shatter {
+    animation: shatter 0.8s forwards;
+}
+@keyframes shatter {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    50% { transform: scale(1.5) rotate(15deg); opacity: 0.5; }
+    100% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+}
+
+#unlockName {
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+    margin-top: 10px;
+}
+/* --- ACHIEVEMENT DETAIL MODAL STYLES --- */
+#achievementDetailOverlay .modal-content {
+    background: #1f1f1f; /* A slightly lighter dark grey */
+    border: 2px solid var(--secondary-color);
+    box-shadow: 0 0 35px rgba(255, 140, 0, 0.6);
+    border-radius: 20px;
+}
+
+#detailIcon {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    border: 3px solid var(--secondary-color);
+    box-shadow: 0 0 20px var(--secondary-color), inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+#detailName {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2.2rem;
+    color: var(--secondary-color);
+    text-shadow: 0 0 10px var(--primary-color), var(--text-outline);
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+#detailDescription {
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 300px;
+    margin: 0 auto 10px; /* Add margin to the bottom */
 }
     </style>
 </head>
 <body>
-    <div id="startupScreen">
-        <video autoplay loop muted playsinline class="video-background"><source src="fire_loop_video.mp4" type="video/mp4"></video>
+        <div id="startupScreen">
+        <video autoplay loop muted playsinline class="video-background" id="calmFireVideo_startup"><source src="fire_loop_video.mp4" type="video/mp4"></video>
+        <video autoplay loop muted playsinline class="video-background hidden-video" id="ragingFireVideo_startup"><source src="fire_loop_video_2.mp4" type="video/mp4"></video>
         <div class="startup-image-overlay"></div>
         <div class="startup-logo-container">
              <img src="logo.png" alt="Flamez Logo" class="startup-logo-image">
@@ -428,27 +622,39 @@ header {
         </div>
     </div>
 
-    <div class="app-container">
-        <video autoplay loop muted playsinline class="video-background"><source src="fire_loop_video.mp4" type="video/mp4"></video>
+        <div class="app-container">
+        <video autoplay loop muted playsinline class="video-background" id="calmFireVideo_app"><source src="fire_loop_video.mp4" type="video/mp4"></video>
+        <video autoplay loop muted playsinline class="video-background hidden-video" id="ragingFireVideo_app"><source src="fire_loop_video_2.mp4" type="video/mp4"></video>
+       
         <header>
+            <!-- Left Side Controls -->
             <div class="header-controls left-controls">
-                <button id="musicBtn" aria-label="Toggle Music Player"><img src="music_note.png" alt="Music"></button>
+                <div class="icon-stack"> <!-- We renamed 'left-stack' to 'icon-stack' -->
+                    <button id="achievementsBtn" aria-label="View Achievements"><img src="Achievements-Icon.png" alt="Achievements"></button>
+                    <button id="musicBtn" aria-label="Toggle Music Player"><img src="music_note.png" alt="Music"></button>
+                </div>
                 <button id="historyBtn" aria-label="View Chat History"><img src="chat_history.png" alt="History"></button>
             </div>
-            <div class="header-logo-container"><img src="logo.png" alt="Flamez Logo" class="header-logo"></div>
-<!-- THIS IS THE NEW, CORRECTED HTML FOR THE RIGHT-SIDE ICONS -->
-<div class="header-controls right-controls">
-    <button id="newChatBtn" aria-label="New Chat"><img src="new_chat_symbol.png" alt="New Chat"></button>
-    <div class="right-stack">
-        <button id="helpBtn" aria-label="Help"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg></button>
-        <button id="soundToggleBtn" aria-label="Toggle Sound">
-           <img id="soundOnIcon" src="sound_on_symbol.png" alt="Sound On">
-           <img id="soundOffIcon" class="hidden" src="sound_off_symbol.png" alt="Sound Off">
-        </button>
-    </div>
-</div>
+
+            <!-- Center Logo -->
+            <div class="header-logo-container">
+                <img src="logo.png" alt="Flamez Logo" class="header-logo">
+            </div>
+
+            <!-- Right Side Controls -->
+            <div class="header-controls right-controls">
+                <button id="newChatBtn" aria-label="New Chat"><img src="new_chat_symbol.png" alt="New Chat"></button>
+                <div class="icon-stack"> <!-- We use the SAME class name here: 'icon-stack' -->
+                    <button id="helpBtn" aria-label="Help"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg></button>
+                    <button id="soundToggleBtn" aria-label="Toggle Sound">
+                       <img id="soundOnIcon" src="sound_on_symbol.png" alt="Sound On">
+                       <img id="soundOffIcon" class="hidden" src="sound_off_symbol.png" alt="Sound Off">
+                    </button>
+                </div>
+            </div>
         </header>
-        <main class="chat-window" id="chatWindow">
+
+                <main class="chat-window" id="chatWindow">
              <div class="typing-indicator" id="typingIndicator">
                 <img src="battle-bot-2.png" alt="Thinking..." class="chat-avatar">
                 <div class="dots-container"><span></span><span></span><span></span></div>
@@ -459,7 +665,7 @@ header {
                 <textarea id="userInput" placeholder="Type your rhymes here / make them clear..." autocomplete="off" required rows="2"></textarea>
             </div>
             <button type="button" id="slashBtn" aria-label="Add bar separator">/</button>
-            <button type="submit" id="sendBtn" aria-label="Send message">
+            <button type="button" id="sendBtn" aria-label="Send message">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
         </form>
@@ -489,23 +695,40 @@ header {
     <div id="confirmOverlay" class="modal-overlay"><div class="modal-content"><h1>Start New Battle?</h1><p>Your current battle will be saved to your history.</p><div id="confirmBtnWrapper"><button id="confirmNoBtn" class="confirm-btn">No</button><button id="confirmYesBtn" class="confirm-btn">Yes</button></div></div></div>
     <div id="tutorialPromptOverlay" class="modal-overlay"><div class="modal-content"><h1>Tutorial</h1><p>Would you like a quick tour of the app?</p><div id="confirmBtnWrapper"><button id="tutorialNoBtn" class="confirm-btn">No</button><button id="tutorialYesBtn" class="confirm-btn">Yes</button></div><div class="do-not-show-again"><input type="checkbox" id="doNotShowTutorial"><label for="doNotShowTutorial">Do not show this again</label></div></div></div>
     
-    <div id="musicContinueOverlay" class="modal-overlay">
+    <div id="achievementsOverlay" class="modal-overlay">
         <div class="modal-content">
-            <h1>Continue Music?</h1>
-            <p>Do you want the theme song to keep playing?</p>
-            <div id="confirmBtnWrapper">
-                <button id="musicContinueNoBtn" class="confirm-btn">No</button>
-                <button id="musicContinueYesBtn" class="confirm-btn">Yes</button>
-            </div>
+            <h1>Achievements</h1>
+            <div id="achievementsContent"></div>
+            <button id="achievementsBackBtn" class="confirm-btn">Back</button>
         </div>
     </div>
 
-    <!-- THIS IS THE NEW, CORRECTED HTML FOR THE TUTORIAL NAVIGATION -->
+    <div id="unlockOverlay" class="modal-overlay">
+        <div class="modal-content unlock-content">
+            <h1 id="unlockTitle">ACHIEVEMENT UNLOCKED</h1>
+            <div id="unlockIconWrapper" class="unlock-icon-wrapper">
+                <img id="unlockIcon" src="Unlock-Achievements-Icon.png" alt="Unlock">
+            </div>
+            <p id="unlockName"></p>
+        </div>
+    </div>
+
+    <!-- Achievement Detail Modal -->
+    <div id="achievementDetailOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <img id="detailIcon" src="" alt="Achievement Icon">
+            <h1 id="detailName"></h1>
+            <p id="detailDescription"></p>
+            <button id="detailBackBtn" class="confirm-btn">Back</button>
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
     <div id="tutorial-overlay">
         <div id="tutorial-step" class="tutorial-step">
             <p id="tutorial-text"></p>
             <div class="tutorial-nav">
-                <button id="tutorial-back">Back</button> <!-- Button Added -->
+                <button id="tutorial-back">Back</button>
                 <button id="tutorial-next">Next</button>
                 <button id="tutorial-finish" class="hidden">Finish</button>
             </div>
@@ -521,6 +744,7 @@ header {
         let battleEngine = null;
         let wasThemeMusicPlayedOnMenu = false;
         let isInitialLoad = true; // Flag to control animations on startup
+        let isRaging = false; // NEW: Tracks the background video state
 
         function triggerHapticFeedback() { if (navigator.vibrate) navigator.vibrate(10); }
 
@@ -715,11 +939,11 @@ function parseLyrics(lyrics) {
 }
 
         function initializeChatApp() {
-            let shortMessageCounter = 0, lastAiMessageMood = null;let battleHeat = 0; // Tracks the intensity of the battle
-            const storage = getStorage();
-    if (storage.currentSession.length > 0) {
-        archiveCurrentSession();
-    }
+            // Core app state variables
+            let shortMessageCounter = 0, lastAiMessageMood = null, battleHeat = 0, battleTurnCounter = 0;
+            let achievementQueue = [];
+
+            // UI Elements Cache
             const ui = {
                 chatForm: document.getElementById('chatForm'), userInput: document.getElementById('userInput'),
                 slashBtn: document.getElementById('slashBtn'), sendBtn: document.getElementById('sendBtn'),
@@ -732,482 +956,527 @@ function parseLyrics(lyrics) {
                 confirmOverlay: document.getElementById('confirmOverlay'), confirmYesBtn: document.getElementById('confirmYesBtn'),
                 confirmNoBtn: document.getElementById('confirmNoBtn'), helpBtn: document.getElementById('helpBtn'),
                 tutorialPrompt: document.getElementById('tutorialPromptOverlay'),
+                tutorialNoBtn: document.getElementById('tutorialNoBtn'),
+                tutorialYesBtn: document.getElementById('tutorialYesBtn'),
                 themeSongControl: document.getElementById('themeSongControl'),
-                musicContinueOverlay: document.getElementById('musicContinueOverlay')
+                calmFire_app: document.getElementById('calmFireVideo_app'),
+                ragingFire_app: document.getElementById('ragingFireVideo_app'),
+                achievementsBtn: document.getElementById('achievementsBtn'),
+                achievementsOverlay: document.getElementById('achievementsOverlay'),
+                achievementsContent: document.getElementById('achievementsContent'),
+                achievementsBackBtn: document.getElementById('achievementsBackBtn'),
+                unlockOverlay: document.getElementById('unlockOverlay'),
+                unlockIcon: document.getElementById('unlockIcon'),
+                unlockName: document.getElementById('unlockName'),
+                unlockTitle: document.getElementById('unlockTitle'),
+                // New elements for the detail modal
+                achievementDetailOverlay: document.getElementById('achievementDetailOverlay'),
+                detailIcon: document.getElementById('detailIcon'),
+                detailName: document.getElementById('detailName'),
+                detailDescription: document.getElementById('detailDescription'),
+                detailBackBtn: document.getElementById('detailBackBtn')
             };
+            
+            // Sounds Cache
             const sounds = {
                 click: document.getElementById("clickSound"),
                 snare: document.getElementById("snareSound"),
-                theme: document.getElementById("themeMusic")
+                theme: document.getElementById("themeMusic"),
+                unlock: new Audio('achievement_unlock.mp3') 
             };
-            
+            sounds.unlock.volume = 0.3;
+
+            // Initialize Battle Engine
             battleEngine = initializeBattleEngine();
+            
+
             const smartAssRemarks=["You're the human equivalent of a dial-up modem; all hesitation and no connection.","The only thing you're consistent at is failing to make an impact.","Your legacy is an unread text message. It'll just sit there and disappear.","You're a self-destructing text message. The second I read it, it's gone.","You're the final draft of a poem that never should've been written.","Your verses have the same energy as a drained battery. You're just dead.","I've heard better threats from a 'low battery' warning.","Your entire existence feels like a typo that autocorrect still can't fix.","You're the 'skip ad' button of human beings.","I wouldn't trust you with a house plant, let alone a verse.","You're the kind of guy who buys a lottery ticket and then loses it.","I've seen more substance in a piece of lint.","You're like a song on a playlist that everyone skips.","Your verses are like a bad WiFi signal; they keep dropping.","You came here to put up a fight but you brought a fucking butter knife."];
             
-            loadCurrentSession();
+            // --- Achievement System ---
+            const ALL_ACHIEVEMENTS = {
+                'first_battle': { name: 'Stepping Into the Ring', img: 'Stepping-Into-the-Ring-Achievement.png', description: 'Started your first battle against Flamez AI.', unlocked: false },
+                'bars_100': { name: 'Lyrical Apprentice', img: 'Lyrical-Apprentice-Achievement.png', description: 'Spit a total of 100 bars.', unlocked: false },
+                'bars_500': { name: 'Verse Virtuoso', img: 'Verse-Virtuoso-Achievement.png', description: 'Spit a total of 500 bars.', unlocked: false },
+                'bars_1000': { name: 'Bar King', img: 'Bar-King-Achievement.png', description: 'Spit a total of 1,000 bars.', unlocked: false },
+                'bars_5000': { name: 'Bar God', img: 'Bar-God-Achievement.png', description: 'Spit a total of 5,000 bars.', unlocked: false },
+                'bars_10000': { name: 'Flame God I', img: 'Flame-God-1-Achievement.png', description: 'Spit a total of 10,000 bars.', unlocked: false },
+                'bars_25000': { name: 'Flame God II', img: 'Flame-God-2-Achievement.png', description: 'Spit a total of 25,000 bars.', unlocked: false },
+                'bars_50000': { name: 'Flame God III', img: 'Flame-God-3-Achievement.png', description: 'Spit a total of 50,000 bars.', unlocked: false },
+                'bars_100000': { name: 'Flame God IV', img: 'Flame-God-4-Achievement.png', description: 'Spit a total of 100,000 bars.', unlocked: false },
+                'nemo_bars': { name: 'Nemo Bars', img: 'Nemo-Bars-Achievement.png', description: 'Receive the laughing emoji reaction from the AI 100 times.', unlocked: false }
+            };
 
-const playSound = (sound) => {
-    // Only play the sound if it's not muted AND the theme music is paused.
-    if (!sound.muted && sounds.theme.paused) { 
-        sound.currentTime = 0;
-        sound.play().catch(e => console.log("Sound play failed:", e));
+          function getStatsStorage() {
+    const defaults = { totalBarsSpit: 0, laughReactionsReceived: 0, achievements: { ...ALL_ACHIEVEMENTS } };
+    const stored = JSON.parse(localStorage.getItem('flamezStatsV1'));
+
+    if (!stored) {
+        return defaults; // No saved data, return fresh defaults
     }
-};            
+
+    // If there IS saved data, merge it carefully to preserve new properties
+    const finalStats = { ...defaults, ...stored }; 
+    const finalAchievements = {};
+
+    for (const achievementId in defaults.achievements) {
+        const defaultAch = defaults.achievements[achievementId];
+        const storedAch = stored.achievements ? stored.achievements[achievementId] : undefined;
+        
+        // This ensures the description from the code is kept, while the unlocked status from storage is used
+        finalAchievements[achievementId] = { ...defaultAch, ...storedAch };
+    }
+
+    finalStats.achievements = finalAchievements;
+    return finalStats;
+}
+
+            function saveStatsStorage(stats) { localStorage.setItem('flamezStatsV1', JSON.stringify(stats)); }
+            
+            function showAchievementNotification(show) {
+                const existingDot = ui.achievementsBtn.querySelector('.notification-dot');
+                if (show && !existingDot) {
+                    const dot = document.createElement('div');
+                    dot.className = 'notification-dot';
+                    ui.achievementsBtn.appendChild(dot);
+                } else if (!show && existingDot) {
+                    existingDot.remove();
+                }
+            }
+
+            function unlockAchievement(achievementId) {
+                let stats = getStatsStorage();
+                if (!stats.achievements[achievementId] || stats.achievements[achievementId].unlocked) return;
+                stats.achievements[achievementId].unlocked = true;
+                saveStatsStorage(stats);
+                achievementQueue.push(stats.achievements[achievementId]);
+                showAchievementNotification(true);
+            }
+
+            function showNextUnlock() {
+                if (achievementQueue.length === 0) {
+                    ui.unlockOverlay.style.display = 'none';
+                    return;
+                }
+                const achievement = achievementQueue.shift();
+                if (achievementQueue.length === 0) showAchievementNotification(false);
+                
+                ui.unlockName.textContent = achievement.name;
+                ui.unlockIcon.src = 'Unlock-Achievements-Icon.png';
+                ui.unlockIcon.classList.remove('shatter');
+                ui.unlockOverlay.style.display = 'flex';
+                sounds.unlock.play();
+
+                function revealAchievement() {
+                    ui.unlockIcon.classList.add('shatter');
+                    setTimeout(() => {
+                        ui.unlockIcon.src = achievement.img;
+                        ui.unlockIcon.classList.remove('shatter');
+                    }, 400);
+                    ui.unlockOverlay.removeEventListener('click', revealAchievement);
+                    setTimeout(showNextUnlock, 2000);
+                }
+                ui.unlockOverlay.addEventListener('click', revealAchievement);
+            }
+
+            function checkAchievements(userBarCount) {
+                let stats = getStatsStorage();
+                stats.totalBarsSpit += userBarCount;
+                if (battleTurnCounter === 1) unlockAchievement('first_battle');
+                if (stats.totalBarsSpit >= 100) unlockAchievement('bars_100');
+                if (stats.totalBarsSpit >= 500) unlockAchievement('bars_500');
+                if (stats.totalBarsSpit >= 1000) unlockAchievement('bars_1000');
+                if (stats.totalBarsSpit >= 5000) unlockAchievement('bars_5000');
+                if (stats.totalBarsSpit >= 10000) unlockAchievement('bars_10000');
+                if (stats.totalBarsSpit >= 25000) unlockAchievement('bars_25000');
+                if (stats.totalBarsSpit >= 50000) unlockAchievement('bars_50000');
+                if (stats.totalBarsSpit >= 100000) unlockAchievement('bars_100000');
+                saveStatsStorage(stats);
+            }
+            
+                        function displayAchievements() {
+                const stats = getStatsStorage();
+                ui.achievementsContent.innerHTML = '';
+
+                // New function to show details
+                function showAchievementDetails(achievementData) {
+    playSound(sounds.click);
+    ui.detailIcon.src = achievementData.img;
+    ui.detailName.textContent = achievementData.name;
+    ui.detailDescription.textContent = achievementData.description; // <-- ADD THIS LINE
+    ui.achievementDetailOverlay.style.display = 'flex';
+}
+                
+                // Add event listener for the new back button
+                ui.detailBackBtn.onclick = () => {
+                    ui.achievementDetailOverlay.style.display = 'none';
+                };
+
+                for (const id in stats.achievements) {
+                    const ach = stats.achievements[id];
+                    const item = document.createElement('div');
+                    item.className = 'achievement-item';
+                    
+                    if (ach.unlocked) {
+                        item.classList.add('unlocked');
+                        // Add click listener ONLY if unlocked
+                        item.addEventListener('click', () => showAchievementDetails(ach));
+                    }
+
+                    item.innerHTML = `
+                        <img src="${ach.unlocked ? ach.img : 'Unlock-Achievements-Icon.png'}" alt="${ach.name}" class="achievement-icon">
+                        <p class="achievement-name">${ach.unlocked ? ach.name : '?????'}</p>`;
+                    ui.achievementsContent.appendChild(item);
+                }
+            }
+            
+            // --- Helper Functions ---
+            const playSound = (sound) => { if (!sounds.click.muted && sounds.theme.paused) { sound.currentTime = 0; sound.play().catch(e => console.log("Sound play failed:", e)); } };
+            function switchBackground(switchToRaging) { if (switchToRaging && !isRaging) { isRaging = true; ui.calmFire_app.classList.add('hidden-video'); ui.ragingFire_app.classList.remove('hidden-video'); } else if (!switchToRaging && isRaging) { isRaging = false; ui.calmFire_app.classList.remove('hidden-video'); ui.ragingFire_app.classList.add('hidden-video'); } }
+            function doWordsRhyme(word1, word2) { if (!word1 || !word2 || word1 === word2) return false; const minLength = 2; if (word1.length <= minLength || word2.length <= minLength) return false; return word1.slice(-3) === word2.slice(-3); }
+            function analyzeRhymeScheme(text) { const bars = text.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 5); if (bars.length < 4) return null; const lastWords = bars.map(bar => bar.split(' ').pop().replace(/[.,?!]/g, '').toLowerCase()); if (doWordsRhyme(lastWords[0], lastWords[1]) && doWordsRhyme(lastWords[2], lastWords[3])) { return 'AABB'; } if (doWordsRhyme(lastWords[0], lastWords[2]) && doWordsRhyme(lastWords[1], lastWords[3])) { return 'ABAB'; } return 'messy'; }
+
+            // --- THIS ENTIRE BLOCK WAS MISSING AND HAS BEEN RESTORED ---
+            ui.tutorialNoBtn.addEventListener('click', () => { triggerHapticFeedback(); playSound(sounds.snare); if (document.getElementById('doNotShowTutorial').checked) localStorage.setItem('flamezTutorialSeen', 'true'); ui.tutorialPrompt.style.display = 'none'; });
+            ui.tutorialYesBtn.addEventListener('click', () => { triggerHapticFeedback(); playSound(sounds.click); ui.tutorialPrompt.style.display = 'none'; startTutorial(true); });
+            
+            ui.musicBtn.addEventListener('click', () => { playSound(sounds.click); ui.musicOverlay.style.display = 'flex'; });
+            ui.backBtn.addEventListener('click', () => ui.musicOverlay.style.display = 'none');
+            
+            ui.historyBtn.addEventListener('click', () => { playSound(sounds.snare); displayHistory(); ui.historyOverlay.style.display = 'flex'; });
+            ui.historyBackBtn.addEventListener('click', () => ui.historyOverlay.style.display = 'none');
+
+            ui.newChatBtn.addEventListener('click', () => { playSound(sounds.snare); ui.confirmOverlay.style.display = 'flex'; });
+            ui.confirmNoBtn.addEventListener('click', () => ui.confirmOverlay.style.display = 'none');
+            ui.confirmYesBtn.addEventListener('click', () => { ui.confirmOverlay.style.display = 'none'; archiveCurrentSession(); clearChatUI(); });
+            
+            ui.helpBtn.addEventListener('click', () => startTutorial(false));
+
+            ui.achievementsBtn.addEventListener('click', () => {
+                playSound(sounds.snare);
+                displayAchievements();
+                ui.achievementsOverlay.style.display = 'flex';
+                if (achievementQueue.length > 0) { showNextUnlock(); }
+            });
+            ui.achievementsBackBtn.addEventListener('click', () => ui.achievementsOverlay.style.display = 'none');
+
+            ui.soundToggleBtn.addEventListener('click', () => {
+                const isMuted = sounds.click.muted;
+                sounds.click.muted = !isMuted;
+                sounds.snare.muted = !isMuted;
+                ui.soundOnIcon.classList.toggle('hidden', !isMuted);
+                ui.soundOffIcon.classList.toggle('hidden', isMuted);
+            });
+            // --- END OF RESTORED BLOCK ---
+
             function showInitialPrompts() {
                 const tutorialSeen = localStorage.getItem('flamezTutorialSeen') === 'true';
                 if (!tutorialSeen) { ui.tutorialPrompt.style.display = 'flex'; }
-                else if (wasThemeMusicPlayedOnMenu && !sounds.theme.paused) { ui.musicContinueOverlay.style.display = 'flex'; }
             }
-            showInitialPrompts();
-
-            document.getElementById('tutorialNoBtn').addEventListener('click', () => { triggerHapticFeedback(); playSound(sounds.snare); if (document.getElementById('doNotShowTutorial').checked) localStorage.setItem('flamezTutorialSeen', 'true'); ui.tutorialPrompt.style.display = 'none'; if (wasThemeMusicPlayedOnMenu && !sounds.theme.paused) ui.musicContinueOverlay.style.display = 'flex'; });
-            document.getElementById('tutorialYesBtn').addEventListener('click', () => { triggerHapticFeedback(); playSound(sounds.click); ui.tutorialPrompt.style.display = 'none'; startTutorial(true); });
             
-            document.getElementById('musicContinueNoBtn').addEventListener('click', () => { triggerHapticFeedback(); playSound(sounds.snare); sounds.theme.pause(); ui.musicContinueOverlay.style.display = 'none'; });
-            document.getElementById('musicContinueYesBtn').addEventListener('click', () => { triggerHapticFeedback(); playSound(sounds.click); ui.musicContinueOverlay.style.display = 'none'; });
-            
-            ui.musicBtn.addEventListener('click', () => playSound(sounds.click));
-            ui.historyBtn.addEventListener('click', () => playSound(sounds.snare));
-            ui.newChatBtn.addEventListener('click', () => playSound(sounds.snare));
-            
-            ui.musicBtn.addEventListener('click', () => { ui.musicOverlay.style.display = 'flex'; });
-            ui.backBtn.addEventListener('click', () => { ui.musicOverlay.style.display = 'none'; });
-            ui.historyBtn.addEventListener('click', () => { displayHistory(); ui.historyOverlay.style.display = 'flex'; });
-            ui.historyBackBtn.addEventListener('click', () => { ui.historyOverlay.style.display = 'none'; });
-            ui.newChatBtn.addEventListener('click', () => { ui.confirmOverlay.style.display = 'flex'; });
-            ui.confirmNoBtn.addEventListener('click', () => { ui.confirmOverlay.style.display = 'none'; });
-            ui.confirmYesBtn.addEventListener('click', () => { ui.confirmOverlay.style.display = 'none'; archiveCurrentSession(); clearChatUI(); });
-            ui.helpBtn.addEventListener('click', () => startTutorial(false));
             ui.slashBtn.addEventListener('click', (event) => { event.preventDefault(); playSound(sounds.snare); ui.userInput.value += ' / '; ui.userInput.focus(); });
-            
-                // This makes the textarea grow automatically as you type.
-    // --- THIS IS THE FINAL, IMPROVED AUTO-GROW SCRIPT ---
+            ui.userInput.addEventListener('input', () => { const target = ui.userInput; const styles = window.getComputedStyle(target); const maxHeight = parseInt(styles.maxHeight, 10); target.style.height = 'auto'; const scrollHeight = target.scrollHeight; if (scrollHeight > maxHeight) { target.style.overflowY = 'auto'; } else { target.style.overflowY = 'hidden'; } const newHeight = Math.min(scrollHeight, maxHeight); target.style.height = `${newHeight}px`; });
+            ui.userInput.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleFormSubmission(); } });
+            if (window.visualViewport) { window.visualViewport.addEventListener('resize', () => { if (document.activeElement === ui.userInput) { setTimeout(() => { ui.chatForm.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 100); } }); }
 
-ui.userInput.addEventListener('input', () => {
-    const target = ui.userInput;
-    const styles = window.getComputedStyle(target);
-    const maxHeight = parseInt(styles.maxHeight, 10);
+            const handleFormSubmission = async () => {
+                if (document.activeElement) { document.activeElement.blur(); }
+                if (ui.chatForm.classList.contains('form-disabled')) return;
+                const userMessageText = ui.userInput.value.trim();
+                if (userMessageText === '') return;
 
-    // Reset height to calculate the true height of the content
-    target.style.height = 'auto';
-    const scrollHeight = target.scrollHeight;
 
-    // --- THIS IS THE NEW LOGIC ---
-    // If the content is taller than the max height, allow scrolling.
-    // Otherwise, keep it hidden so the scrollbar track never appears.
-    if (scrollHeight > maxHeight) {
-        target.style.overflowY = 'auto';
-    } else {
-        target.style.overflowY = 'hidden';
-    }
-    // --- END OF NEW LOGIC ---
-
-    // Set the new height, capped at the max height
-    const newHeight = Math.min(scrollHeight, maxHeight);
-    target.style.height = `${newHeight}px`;
-});
-
-    // This handles the Enter key:
-    // - Enter alone sends the message.
-    // - Shift+Enter creates a new line.
-    ui.userInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault(); // Prevents a new line from being added
-            handleFormSubmission(); // Calls our new function directly
-        }
-    });
-     if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-        // This event fires when the keyboard appears/disappears.
-        if (document.activeElement === ui.userInput) {
-            setTimeout(() => {
-                 ui.chatForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }, 100);
-        }
-    });
-}
-            
-            // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD 'submit' LISTENER
-
-const handleFormSubmission = async () => {
-    // Prevent submissions if the form is already processing
-    if (ui.chatForm.classList.contains('form-disabled')) return;
-
-    const userMessageText = ui.userInput.value.trim();
-    if (userMessageText === '') return;
-
-    ui.chatForm.classList.add('form-disabled');
-    playSound(sounds.click);
-
-    const userMessageId = Date.now();
-    displayMessage(userMessageText, 'user', userMessageId);
-    saveMessage({ sender: 'user', text: userMessageText, id: userMessageId });
-
-    ui.userInput.value = '';
-    ui.userInput.style.height = 'auto';
-    ui.userInput.blur(); // <-- THIS IS THE NEW LINE THAT HIDES THE KEYBOARD
-    ui.typingIndicator.style.display = 'flex';
-    scrollToBottom();
-
-    const baseDelay = 1000;
-    const dynamicDelay = Math.min(userMessageText.length * 15, 4000);
-    const finalDelay = baseDelay + dynamicDelay + (Math.random() * 500);
-    await new Promise(resolve => setTimeout(resolve, finalDelay));
-
-    ui.typingIndicator.style.display = 'none';
-    let aiResponseText;
-    const userBars = userMessageText.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 0);
-
-    if (userBars.length < 4 && lastAiMessageMood !== 'finish') {
-        shortMessageCounter++;
-        if (shortMessageCounter === 3) aiResponseText = "Please provide 4 or more bars to even be a challenge worth the competition.";
-        else if (shortMessageCounter === 6) aiResponseText = "Seriously, give me something to work with. I need 4 or more bars or this is just a waste of my processing power.";
-        else aiResponseText = smartAssRemarks[Math.floor(Math.random() * smartAssRemarks.length)];
-    } else {
-        battleHeat += 10;
-        const userVerseAnalysis = analyzeUserVerse(userMessageText); // <-- NEW: Analyze verse first
-        if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') {
-            battleHeat += 15;
-        }
-
-        let mood = lastAiMessageMood; // Start with mood from emoji reaction, if any
-
-        // If no mood was set by an emoji, let's calculate one
-        if (!mood) {
-            // NEW TRIGGER: Immediately get angry if the user is aggressive
-            if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') {
-                mood = 'angry';
-            } 
-            // EASIER TRIGGER: Get 'finish' mood more easily
-            else if (battleHeat > 70 && Math.random() < 0.75) { // <-- CHANGED: Threshold lowered from 100 to 80
-                mood = 'finish';
-            } 
-            // EASIER TRIGGER: Get 'angry' mood more easily
-            else if (battleHeat > 30 && Math.random() < 0.7) { // <-- CHANGED: Threshold lowered from 60 to 40, chance increased
-                mood = 'angry';
-            }
-        }
-        
-        shortMessageCounter = 0;
-        
-        lastAiMessageMood = mood; // <-- IMPORTANT: Set the mood for the avatar BEFORE the message displays
-        aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, mood);
-        lastAiMessageMood = null; // <-- Reset the mood for the next turn
-    }
-
-    const aiMessageId = Date.now() + 1;
-    displayMessage(aiResponseText, 'ai', aiMessageId);
-    saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
-    
-    ui.chatForm.classList.remove('form-disabled');
-    // The keyboard is now hidden. The user must tap the input to bring it back.
-
-    const banterChance = 0.35;
-    if (userBars.length >= 4 && battleHeat > 30 && Math.random() < banterChance) {
-        const banterLines = ["Your turn.", "Easy work.", "Top that.", "Let's see what you got.", "That's how it's done."];
-        const banterText = banterLines[Math.floor(Math.random() * banterLines.length)];
-        const verseDuration = aiResponseText.length * 40;
-        setTimeout(() => {
-            const banterId = Date.now() + 2;
-            displayMessage(banterText, 'ai', banterId, null, true);
-            saveMessage({ sender: 'ai', text: banterText, id: banterId, reaction: null });
-        }, verseDuration + 500);
-    }
-
-    setTimeout(() => {
-        const aiReaction = analyzeUserVerse(userMessageText);
-        if (aiReaction) addReactionToMessage(userMessageId, aiReaction);
-    }, 500);
-};
-
-// We now listen for a CLICK on the send button, not a form submit.
-ui.sendBtn.addEventListener('click', handleFormSubmission);
-            function displayWelcomeMessage() { const t="End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez: AI start the fight.";if(!document.querySelector(".welcome-message")){const e=document.createElement("div");e.classList.add("message-wrapper","welcome-wrapper");const a=document.createElement("div");a.classList.add("message","ai-message","welcome-message"),a.innerHTML=t,e.appendChild(a),ui.chatWindow.insertBefore(e,ui.typingIndicator)}scrollToBottom()}
-            
-function displayMessage(text, sender, id, reaction = null, isBanter = false) {
-    const messageWrapper = document.createElement("div");
-    messageWrapper.id = `msg-${id}`;
-    messageWrapper.classList.add("message-wrapper", `${sender}-wrapper`);
-
-    if (!isBanter) {
-        const avatar = document.createElement("img");
-        avatar.classList.add("chat-avatar");
-        
-        // --- THIS IS THE NEW LOGIC ---
-        // It sets the avatar source based on the sender and the AI's current mood.
-        if (sender === 'user') {
-            avatar.src = "ac.png";
-        } else {
-            // Check the AI's mood. If it's angry or going for a finisher, use the aggressive avatar.
-            if (lastAiMessageMood === 'angry' || lastAiMessageMood === 'finish') {
-                avatar.src = "battle-bot-4.png"; // Your new angry avatar
-            } else {
-                avatar.src = "battle-bot.png"; // The default AI avatar
-            }
-        }
-        // --- END OF NEW LOGIC ---
-
-        messageWrapper.appendChild(avatar);
-    }
-
-    const messageEl = document.createElement("div");
-    messageEl.classList.add("message", `${sender}-message`, "new-message-glow");
-    
-    if (isBanter) {
-        messageEl.classList.add('banter-message');
-    }
-    
-    messageWrapper.appendChild(messageEl);
-    ui.chatWindow.insertBefore(messageWrapper, ui.typingIndicator);
-    
-    // Scroll needs to happen after the element is in the DOM
-    if (!isInitialLoad) {
-        scrollToBottom();
-    }
-
-    // FIX: Animation now ONLY runs if it's an AI message, NOT banter, AND NOT the initial app load.
-    if (sender === 'ai' && !isBanter && !isInitialLoad) {
-        const words = text.replace(/\s\/\s/g, ' / ').split(' ');
-        let i = 0;
-        function animateWords() {
-            if (i < words.length) {
-                const word = words[i];
-                let delay = 120;
-                if (word === '/') {
-                    messageEl.innerHTML += '<br>';
-                    delay = 400;
-                } else {
-                    messageEl.innerHTML += (i > 0 && words[i-1] !== '/' ? ' ' : '') + word;
-                }
+                ui.chatForm.classList.add('form-disabled');
+                playSound(sounds.click);
+                const userMessageId = Date.now();
+                displayMessage(userMessageText, 'user', userMessageId);
+                saveMessage({ sender: 'user', text: userMessageText, id: userMessageId });
+                ui.userInput.value = '';
+                ui.userInput.style.height = 'auto';
+                ui.typingIndicator.style.display = 'flex';
                 scrollToBottom();
-                i++;
-                setTimeout(animateWords, delay);
+                
+                const userBars = userMessageText.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 0);
+                battleTurnCounter++;
+                checkAchievements(userBars.length);
+
+                const baseDelay = 1000;
+                const dynamicDelay = Math.min(userMessageText.length * 15, 4000);
+                const finalDelay = baseDelay + dynamicDelay + (Math.random() * 500);
+                await new Promise(resolve => setTimeout(resolve, finalDelay));
+                ui.typingIndicator.style.display = 'none';
+                let aiResponseText;
+
+                if (userBars.length < 4 && lastAiMessageMood !== 'finish') {
+                    shortMessageCounter++;
+                    if (shortMessageCounter === 3) aiResponseText = "Please provide 4 or more bars to even be a challenge worth the competition.";
+                    else if (shortMessageCounter === 6) aiResponseText = "Seriously, give me something to work with. I need 4 or more bars or this is just a waste of my processing power.";
+                    else aiResponseText = smartAssRemarks[Math.floor(Math.random() * smartAssRemarks.length)];
+                } else {
+                    battleHeat += 10;
+                    const userVerseAnalysis = analyzeUserVerse(userMessageText);
+                    if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') { battleHeat += 15; }
+                    let mood = lastAiMessageMood;
+                    if (!mood) {
+                        if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') { mood = 'angry'; } 
+                        else if (battleHeat > 80 && Math.random() < 0.75) { mood = 'finish'; } 
+                        else if (battleHeat > 40 && Math.random() < 0.7) { mood = 'angry'; }
+                    }
+                    shortMessageCounter = 0;
+                    lastAiMessageMood = mood;
+                    if (mood === 'angry' || mood === 'finish') { switchBackground(true); }
+                    aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, mood);
+                    lastAiMessageMood = null;
+                }
+                const aiMessageId = Date.now() + 1;
+                displayMessage(aiResponseText, 'ai', aiMessageId);
+                saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
+                ui.chatForm.classList.remove('form-disabled');
+
+                const rhymeScheme = analyzeRhymeScheme(userMessageText);
+                const banterChance = 0.35;
+                if (rhymeScheme && rhymeScheme !== 'messy') {
+                    const schemeBanter = `That ${rhymeScheme} scheme... Not bad, I see you.`;
+                     setTimeout(() => {
+                        const banterId = Date.now() + 2;
+                        displayMessage(schemeBanter, 'ai', banterId, null, true, 'scheme-banter');
+                        saveMessage({ sender: 'ai', text: schemeBanter, id: banterId, reaction: null });
+                    }, aiResponseText.length * 40 + 500);
+                }
+                else if (userBars.length >= 4 && battleHeat > 30 && Math.random() < banterChance) {
+                    const banterLines = ["Your turn.", "Easy work.", "Top that.", "Let's see what you got.", "That's how it's done."];
+                    const banterText = banterLines[Math.floor(Math.random() * banterLines.length)];
+                    setTimeout(() => {
+                        const banterId = Date.now() + 2;
+                        displayMessage(banterText, 'ai', banterId, null, true);
+                        saveMessage({ sender: 'ai', text: banterText, id: banterId, reaction: null });
+                    }, aiResponseText.length * 40 + 500);
+                }
+
+                setTimeout(() => {
+                    const aiReaction = analyzeUserVerse(userMessageText);
+                    if (aiReaction) addReactionToMessage(userMessageId, aiReaction);
+                }, 500);
+            };
+
+            ui.sendBtn.addEventListener('click', handleFormSubmission);
+            
+            // Initial load of the app
+            clearChatUI(); // This now correctly starts a fresh battle
+            showInitialPrompts();
+        }
+        function displayMessage(text, sender, id, reaction = null, isBanter = false, banterType = null) {
+            const messageWrapper = document.createElement("div");
+            messageWrapper.id = `msg-${id}`;
+            messageWrapper.classList.add("message-wrapper", `${sender}-wrapper`);
+
+            // This is the key change: Check for the special ID
+            if (id === 'welcome-message-0') {
+                messageWrapper.classList.add("welcome-wrapper");
+            } else if (!isBanter) { // Regular messages get an avatar
+                const avatar = document.createElement("img");
+                avatar.classList.add("chat-avatar");
+                avatar.src = sender === 'user' ? "ac.png" : "battle-bot.png";
+                messageWrapper.appendChild(avatar);
+            }
+
+            const messageEl = document.createElement("div");
+            messageEl.classList.add("message", `${sender}-message`);
+
+            // Apply special styling classes based on type
+            if (id === 'welcome-message-0') {
+                messageEl.classList.add("welcome-message");
+            } else if (isBanter) {
+                messageEl.classList.add('banter-message');
+                if (banterType === 'scheme-banter') {
+                    messageEl.classList.add('scheme-banter');
+                }
             } else {
-                if (!text.includes("Please provide")) {
+                messageEl.classList.add("new-message-glow");
+            }
+            
+            messageWrapper.appendChild(messageEl);
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.insertBefore(messageWrapper, document.getElementById('typingIndicator'));
+
+            // Animation logic for AI text (unchanged)
+            if (sender === 'ai' && !isBanter && id !== 'welcome-message-0' && !isInitialLoad) {
+                 const words = text.replace(/\s\/\s/g, ' / ').split(' ');
+                let i = 0;
+                function animateWords() {
+                    if (i < words.length) {
+                        const word = words[i];
+                        let delay = 120;
+                        if (word === '/') {
+                            messageEl.innerHTML += '<br>';
+                            delay = 400;
+                        } else {
+                            messageEl.innerHTML += (i > 0 && words[i - 1] !== '/' ? ' ' : '') + word;
+                        }
+                        scrollToBottom();
+                        i++;
+                        setTimeout(animateWords, delay);
+                    } else {
+                        if (!text.includes("Please provide")) {
+                            createReactionUI(messageWrapper, id, reaction);
+                            messageEl.classList.remove('new-message-glow');
+                        }
+                    }
+                }
+                animateWords();
+            } else {
+                // For user messages, welcome message, and initial load
+                messageEl.innerHTML = text.replace(/\s\/\s/g, "<br>").replace(/[.\n]/g, "<br>");
+                if (sender === 'user') {
+                    createReactionPlaceholder(messageWrapper, id);
+                }
+                if (sender === 'ai' && !isBanter && id !== 'welcome-message-0' && !text.includes("Please provide")) {
                     createReactionUI(messageWrapper, id, reaction);
-                    messageEl.classList.remove('new-message-glow'); 
+                }
+            }
+            
+            // Scroll logic (unchanged)
+            if (isInitialLoad) {
+                setTimeout(() => scrollToBottom(), 50);
+            } else {
+                scrollToBottom();
+            }
+        }
+        function createReactionPlaceholder(t,e){const s=document.createElement("div");s.className="reaction-container",s.id=`reaction-container-${e}`,t.appendChild(s)}
+        function createReactionUI(t,e,s){const a=document.createElement("div");a.className="reaction-container";const i=document.createElement("div");i.className="reaction-capsule";const n=document.createElement("div");n.className="reaction-button";const d=document.createElement("div");d.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-3-3h6v-2H9v2zm.5-4h5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-5c-.28 0-.5.22-.5.5s.22.5.5.5z"/></svg>';const o=document.createElement("div");o.className="emoji-display",n.appendChild(d),n.appendChild(o),n.onclick=t=>{t.stopPropagation(),i.classList.toggle("expanded"),document.body.addEventListener("click",()=>i.classList.remove("expanded"),{once:!0})},["😂","🤔","😲","💀"].forEach(t=>{const s=document.createElement("span");s.textContent=t,s.onclick=a=>{a.stopPropagation(),setReaction(t,d,o,i,e)},i.appendChild(s)}),a.appendChild(i),a.appendChild(n),t.appendChild(a),s&&setReaction(s,d,o,i,e,!1)}
+        function setReaction(t,e,s,a,i,n=!0){n&&document.getElementById('clickSound').play();e.style.display="none",s.style.display="block",s.textContent=t,a.classList.remove("expanded");let mood;switch(t){case"😂":mood="angry";break;case"🤔":mood="complex";break;case"😲":mood="arrogant";break;case"💀":mood="finish";break}window.lastAiMessageMood=mood;const d=getStorage();const o=d.currentSession.findIndex(t=>t.id===i);o>-1&&(d.currentSession[o].reaction=t,saveStorage(d))}
+        function addReactionToMessage(messageId, reactionEmoji) {
+            const container = document.getElementById(`reaction-container-${messageId}`);
+            if (container) {
+                const reactionEl = document.createElement("div");
+                reactionEl.className = "reaction-button";
+                reactionEl.innerHTML = `<div class="emoji-display" style="display: block;">${reactionEmoji}</div>`;
+                container.appendChild(reactionEl);
+
+                // Logic to track laugh reactions for the 'Nemo Bars' achievement
+                if (reactionEmoji === '😂') {
+                    let stats = getStatsStorage();
+                    stats.laughReactionsReceived = (stats.laughReactionsReceived || 0) + 1;
+                    if (stats.laughReactionsReceived >= 100) {
+                        unlockAchievement('nemo_bars');
+                    }
+                    saveStatsStorage(stats);
                 }
             }
         }
-        animateWords();
-    } else {
-        // ALL other messages (user, banter, and anything on load) appear instantly.
-        messageEl.innerHTML = text.replace(/\s\/\s/g, "<br>").replace(/[.\n]/g, "<br>");
-        if (sender === 'user') {
-            createReactionPlaceholder(messageWrapper, id);
-        }
-        if (sender === 'ai' && !isBanter && !text.includes("Please provide")) {
-             createReactionUI(messageWrapper, id, reaction);
-        }
-    }
-    
-    // Ensure final scroll on load to show the latest message
-    if (isInitialLoad) {
-        // Use a tiny timeout to ensure all elements are rendered before scrolling
-        setTimeout(() => scrollToBottom(), 50);
-    }
-}
-            function createReactionPlaceholder(t,e){const s=document.createElement("div");s.className="reaction-container",s.id=`reaction-container-${e}`,t.appendChild(s)}
-            function createReactionUI(t, e, s) {
-    const a = document.createElement("div");
-    a.className = "reaction-container";
-    const i = document.createElement("div");
-    i.className = "reaction-capsule";
-    const n = document.createElement("div");
-    n.className = "reaction-button";
-    const d = document.createElement("div");
-    d.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-3-3h6v-2H9v2zm.5-4h5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-5c-.28 0-.5.22-.5.5s.22.5.5.5z"/></svg>';
-    const o = document.createElement("div");
-    o.className = "emoji-display", n.appendChild(d), n.appendChild(o), n.onclick = t => { t.stopPropagation(), i.classList.toggle("expanded"), document.body.addEventListener("click", () => i.classList.remove("expanded"), { once: !0 }) }, ["😂", "🤔", "😲", "💀"].forEach(t => {
-        const s = document.createElement("span");
-        s.textContent = t, s.onclick = a => {
-            a.stopPropagation(), 
-            setReaction(t, d, o, i, e) // --- CHANGED: This line is now simpler. It no longer sets lastAiMessageMood here. ---
-        }, i.appendChild(s)
-    }), a.appendChild(i), a.appendChild(n), t.appendChild(a), s && setReaction(s, d, o, i, e, !1)
-}
-            function setReaction(t, e, s, a, i, n = !0) {
-    n && playSound(sounds.click), e.style.display = "none", s.style.display = "block", s.textContent = t, a.classList.remove("expanded");
-    
-    // --- THIS IS THE NEW LOGIC THAT WAS ADDED ---
-    // It checks which emoji was clicked and sets the AI's mood for its next turn.
-    switch (t) {
-        case '😂': lastAiMessageMood = 'angry'; break;
-        case '🤔': lastAiMessageMood = 'complex'; break;
-        case '😲': lastAiMessageMood = 'arrogant'; break;
-        case '💀': lastAiMessageMood = 'finish'; break;
-    }
-    // --- END OF NEW LOGIC ---
+        function analyzeUserVerse(t){const e=t.toLowerCase(),s=t.split(/\s+/).length;if(["kill","dead","die","grave","funeral","gun","shoot","knife","blade","body","coffin","casket","blood","blast"].some(t=>e.includes(t)))return"💀";if(["fuck","shit","bitch","asshole","damn"].some(t=>e.includes(t)))return"😲";if(t.length>250||/\w{10,}/.test(e))return"🤔";if(s<6)return"😂";return null}
+        function getStorage(){return JSON.parse(localStorage.getItem("flamezChatStorageV2"))||{sessions:[],currentSession:[]}}
+        function saveStorage(s){localStorage.setItem("flamezChatStorageV2",JSON.stringify(s))}
+        function saveMessage(t){const s=getStorage();s.currentSession.push(t),saveStorage(s)}
+        function clearChatUI() {
+            // Reset the AI engine and background video
+            battleEngine = initializeBattleEngine();
+            window.isRaging = false;
+            document.getElementById('calmFireVideo_app').classList.remove('hidden-video');
+            document.getElementById('ragingFireVideo_app').classList.add('hidden-video');
 
-    const d = getStorage();
-    const o = d.currentSession.findIndex(t => t.id === i);
-    o > -1 && (d.currentSession[o].reaction = t, saveStorage(d))
-}
-            function addReactionToMessage(t,e){const s=document.getElementById(`reaction-container-${t}`);if(s){const a=document.createElement("div");a.className="reaction-button",a.innerHTML=`<div class="emoji-display" style="display: block;">${e}</div>`,s.appendChild(a)}}
-            function analyzeUserVerse(t){const e=t.toLowerCase(),s=t.split(/\s+/).length;if(["kill","dead","die","grave","funeral","gun","shoot","knife","blade","body","coffin","casket","blood","blast"].some(t=>e.includes(t)))return"💀";if(["fuck","shit","bitch","asshole","damn"].some(t=>e.includes(t)))return"😲";if(t.length>250||/\w{10,}/.test(e))return"🤔";if(s<6)return"😂";return null}
-            function getStorage() { const s = JSON.parse(localStorage.getItem('flamezChatStorageV2')) || { sessions: [], currentSession: [] }; if (!Array.isArray(s.sessions)) s.sessions = []; if (!Array.isArray(s.currentSession)) s.currentSession = []; return s; } function saveStorage(s) { localStorage.setItem('flamezChatStorageV2', JSON.stringify(s)); } function saveMessage(msg) { const s = getStorage(); s.currentSession.push(msg); saveStorage(s); }
-            function clearChatUI() { 
-    ui.chatWindow.innerHTML = ''; 
-    ui.chatWindow.appendChild(ui.typingIndicator); 
-    battleEngine = initializeBattleEngine(); 
-    displayWelcomeMessage(); 
-    shortMessageCounter = 0; 
-    battleHeat = 0; // <-- ADDED: Resets the battle heat to zero.
-    lastAiMessageMood = null; // <-- ADDED: Clears the AI's previous mood.
-}             
-function loadCurrentSession() {
-    clearChatUI();
-    const storage = getStorage();
-    if (storage.currentSession.length > 0) {
-        document.querySelector('.welcome-message')?.parentElement.remove();
-        storage.currentSession.forEach(msg => displayMessage(msg.text, msg.sender, msg.id, msg.reaction));
-    }
+            // Define the welcome message as a data object
+            const welcomeMessage = {
+                sender: 'ai',
+                text: "End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez: AI start the fight.",
+                id: 'welcome-message-0', // A static, unique ID to identify it
+                reaction: null
+            };
 
-    // --- CHANGED: This timeout ensures all messages render BEFORE we flip the flag ---
-    setTimeout(() => {
-        isInitialLoad = false;
-    }, 100); 
-}
-            function archiveCurrentSession() { const storage = getStorage(); if (storage.currentSession.length > 0) { const session = { id: Date.now(), messages: storage.currentSession }; storage.sessions.push(session); storage.currentSession = []; saveStorage(storage); } }
-            function displayHistory() {
-    const storage = getStorage();
-    const historyContent = document.getElementById('historyContent');
-    historyContent.innerHTML = '';
-    if (storage.sessions.length === 0) {
-        historyContent.innerHTML = '<p>No past battles found.</p>';
-        return;
-    }
+            // Create a new session with the welcome message as the first item
+            const storage = getStorage();
+            storage.currentSession = [welcomeMessage];
+            saveStorage(storage);
+            
+            // Now, load the UI from this new session data
+            loadCurrentSession();
+        }             
+        function loadCurrentSession() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.querySelectorAll('.message-wrapper').forEach(el => el.remove()); // Safely clear only messages
+            chatWindow.appendChild(document.getElementById('typingIndicator'));
 
-    storage.sessions.slice().reverse().forEach(session => {
-        const date = new Date(session.id);
-
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-
-        const link = document.createElement('a');
-        link.href = '#';
-        link.dataset.sessionId = session.id;
-        link.textContent = `Battle from ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            loadSession(session.id);
-        });
-
-        // --- THIS IS THE NEW PART: The delete button ---
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-history-btn';
-        const trashIcon = document.createElement('img');
-        trashIcon.src = 'trash-bin.png';
-        trashIcon.alt = 'Delete Battle';
-        deleteBtn.appendChild(trashIcon);
-        deleteBtn.setAttribute('aria-label', 'Delete battle');
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent the link from firing
-            if (confirm('Are you sure you want to delete this battle forever?')) {
-                deleteSession(session.id);
+            const storage = getStorage();
+            
+            // If the current session is empty (happens on first-ever load)
+            if (storage.currentSession.length === 0) {
+                clearChatUI(); // This will create and load the initial session with the welcome message
+                return; // Stop here
             }
-        });
-        // --- END OF NEW PART ---
 
-        historyItem.appendChild(link);
-        historyItem.appendChild(deleteBtn);
-        historyContent.appendChild(historyItem);
-    });
+            // If a session exists, render all of its messages
+            storage.currentSession.forEach(msg => {
+                displayMessage(msg.text, msg.sender, msg.id, msg.reaction);
+            });
 
-function deleteSession(sessionId) {
-    let storage = getStorage();
-    storage.sessions = storage.sessions.filter(s => s.id !== sessionId);
-    saveStorage(storage);
-    displayHistory(); // Refresh the history list to show the item is gone
-}
-} function loadSession(sessionId) { 
-    archiveCurrentSession(); 
-    const storage = getStorage(); 
-    const sessionToLoad = storage.sessions.find(s => s.id === sessionId); 
-    if (sessionToLoad) { 
-        isInitialLoad = true; // This line fixes the animation issue
-        storage.currentSession = sessionToLoad.messages; 
-        storage.sessions = storage.sessions.filter(s => s.id !== sessionId); 
-        saveStorage(storage); 
-        loadCurrentSession(); 
-        document.getElementById('historyOverlay').style.display = 'none'; 
-        battleHeat = 0; 
-        lastAiMessageMood = null;
-    } 
-}
-            function scrollToBottom() { ui.chatWindow.scrollTop = ui.chatWindow.scrollHeight; }
-            const setupButtonPress = (button) => { if(!button) return; const handlePress = (e) => { e.preventDefault(); button.classList.add('button-pressed'); }; const handleRelease = () => { button.classList.remove('button-pressed'); }; ['mousedown', 'touchstart'].forEach(evt => button.addEventListener(evt, handlePress, { passive: true })); ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => button.addEventListener(evt, handleRelease)); };
-            [ui.slashBtn, ui.sendBtn].forEach(setupButtonPress);
-// THIS IS THE NEW, FULLY REPLACED startTutorial FUNCTION WITH BACK BUTTON LOGIC
-function startTutorial(isAfterIntro) {
-    const overlay = document.getElementById('tutorial-overlay'), 
-          stepElement = document.getElementById('tutorial-step'), 
-          textElement = document.getElementById('tutorial-text'), 
-          backBtn = document.getElementById('tutorial-back'), // Get the back button
-          nextBtn = document.getElementById('tutorial-next'), 
-          finishBtn = document.getElementById('tutorial-finish');
-    
-    let currentStep = 0;
+            setTimeout(() => { isInitialLoad = false; }, 100);
+        }
+        function archiveCurrentSession(){const t=getStorage();t.currentSession.length>0&&(t.sessions.push({id:Date.now(),messages:t.currentSession}),t.currentSession=[],saveStorage(t))}
+        function displayHistory(){const t=getStorage(),s=document.getElementById("historyContent");if(s.innerHTML="",0===t.sessions.length)return void(s.innerHTML="<p>No past battles found.</p>");t.sessions.slice().reverse().forEach(t=>{const a=new Date(t.id),i=document.createElement("div");i.className="history-item";const n=document.createElement("a");n.href="#",n.dataset.sessionId=t.id,n.textContent=`Battle from ${a.toLocaleDateString()} ${a.toLocaleTimeString()}`,n.addEventListener("click",s=>{s.preventDefault(),loadSession(t.id)});const d=document.createElement("button");d.className="delete-history-btn";const o=document.createElement("img");o.src="trash-bin.png",o.alt="Delete Battle",d.appendChild(o),d.setAttribute("aria-label","Delete battle"),d.addEventListener("click",s=>{s.stopPropagation(),confirm("Are you sure you want to delete this battle forever?")&&deleteSession(t.id)}),i.appendChild(n),i.appendChild(d),s.appendChild(i)});function deleteSession(s){let a=getStorage();a.sessions=a.sessions.filter(e=>e.id!==s),saveStorage(a),displayHistory()}}
+        function loadSession(s){archiveCurrentSession();const a=getStorage(),i=a.sessions.find(e=>e.id===s);if(i){isInitialLoad=true;a.currentSession=i.messages;a.sessions=a.sessions.filter(e=>e.id!==s);saveStorage(a);loadCurrentSession();document.getElementById("historyOverlay").style.display="none";}}
+        function scrollToBottom(){document.getElementById('chatWindow').scrollTop=document.getElementById('chatWindow').scrollHeight}
+        const setupButtonPress=t=>{if(!t)return;const s=e=>{e.preventDefault(),t.classList.add("button-pressed")},a=()=>{t.classList.remove("button-pressed")};["mousedown","touchstart"].forEach(e=>t.addEventListener(e,s,{passive:!0})),["mouseup","mouseleave","touchend","touchcancel"].forEach(e=>t.addEventListener(e,a))};
+        [document.getElementById('slashBtn'),document.getElementById('sendBtn')].forEach(setupButtonPress);
+        function startTutorial(isAfterIntro) {
+            const overlay = document.getElementById("tutorial-overlay"),
+                stepElement = document.getElementById("tutorial-step"),
+                textElement = document.getElementById("tutorial-text"),
+                backBtn = document.getElementById("tutorial-back"),
+                nextBtn = document.getElementById("tutorial-next"),
+                finishBtn = document.getElementById("tutorial-finish");
+            let currentStep = 0;
+            const steps = [
+                { id: "userInput", text: "Type your lyrical masterpiece here. Remember, you need at least 4 bars to impress the AI!", arrow: "tutorial-arrow-bottom" },
+                { id: "slashBtn", text: 'Click this to add a "/" to separate your bars. This keeps your rhythm tight.', arrow: "tutorial-arrow-bottom" },
+                { id: "sendBtn", text: "When your verse is ready, hit this button to send it to Flamez AI.", arrow: "tutorial-arrow-bottom" },
+                { id: "achievementsBtn", text: "Click the trophy to view your stats and unlocked achievements!", arrow: "tutorial-arrow-top" },
+                { id: "musicBtn", text: "Click the music note to open the Beats menu and control the theme song.", arrow: "tutorial-arrow-top" },
+                { id: "historyBtn", text: "Click here to review your past battles. You can load any previous chat session.", arrow: "tutorial-arrow-top" },
+                { id: "newChatBtn", text: "Want a fresh start? Click here to begin a new battle.", arrow: "tutorial-arrow-top" },
+                { id: "soundToggleBtn", text: "Toggle all button sound effects on or off with this button.", arrow: "tutorial-arrow-top" },
+                { id: "helpBtn", text: "You can click this button any time to see this tutorial again.", arrow: "tutorial-arrow-top" },
+                { id: "chatWindow", text: "The AI reacts to your bars! You can also react to the AI's responses by clicking the emoji icon that appears on its messages.", arrow: "tutorial-arrow-left" }
+            ];
 
-    // -------------------- EDITED HERE (1 of 2) --------------------
-    // I've changed the arrow for 'slashBtn' to point down.
-    const steps=[
-        {id:'userInput',text:'Type your lyrical masterpiece here. Remember, you need at least 4 bars to impress the AI!',arrow:'tutorial-arrow-bottom'},
-        {id:'slashBtn',text:'Click this to add a "/" to separate your bars. This keeps your rhythm tight.',arrow:'tutorial-arrow-bottom'}, // <-- CHANGED
-        {id:'sendBtn',text:'When your verse is ready, hit this button to send it to Flamez AI.',arrow:'tutorial-arrow-bottom'},
-        {id:'musicBtn',text:'Click the music note to open the Beats menu and control the theme song.',arrow:'tutorial-arrow-top'},
-        {id:'historyBtn',text:'Click here to review your past battles. You can load any previous chat session.',arrow:'tutorial-arrow-top'},
-        {id:'newChatBtn',text:'Want a fresh start? Click here to begin a new battle.',arrow:'tutorial-arrow-top'},
-        {id:'soundToggleBtn',text:'Toggle all button sound effects on or off with this button.',arrow:'tutorial-arrow-top'},
-        {id:'helpBtn',text:'You can click this button any time to see this tutorial again.',arrow:'tutorial-arrow-top'},
-        {id:'chatWindow',text:"The AI reacts to your bars! You can also react to the AI's responses by clicking the emoji icon that appears on its messages.",arrow:'tutorial-arrow-left'}
-    ];
-
-    function showStep(index) {
-        const stepData=steps[index], target=document.getElementById(stepData.id); if (!target) return;
-        
-        stepElement.className = ''; 
-        steps.forEach(s => stepElement.classList.remove(`step-${s.id}`));
-        stepElement.classList.add('tutorial-step', stepData.arrow, `step-${stepData.id}`);
-
-        const targetRect = target.getBoundingClientRect(), appRect = document.querySelector('.app-container').getBoundingClientRect();
-        textElement.textContent = stepData.text;
-        
-        setTimeout(() => { 
-            let top, left;
-            const stepHeight = stepElement.offsetHeight, stepWidth = stepElement.offsetWidth;
-            const offset = 20;
-            switch(stepData.arrow) {
-                case 'tutorial-arrow-bottom': top = targetRect.top - stepHeight - offset; left = targetRect.left + (targetRect.width / 2) - (stepWidth / 2); break;
-                case 'tutorial-arrow-top': top = targetRect.bottom + offset; left = targetRect.left + (targetRect.width / 2) - (stepWidth / 2); break;
-                case 'tutorial-arrow-right': top = targetRect.top + (targetRect.height / 2) - (stepHeight / 2); left = targetRect.left - stepWidth - offset; break;
-                case 'tutorial-arrow-left': top = targetRect.top + (targetRect.height / 2) - (stepHeight / 2); left = targetRect.right + offset; break;
+            function showStep(index) {
+                const stepData = steps[index], target = document.getElementById(stepData.id);
+                if (!target) return;
+                stepElement.className = "";
+                steps.forEach(s => stepElement.classList.remove(`step-${s.id}`));
+                const targetId = steps[index].id;
+                stepElement.classList.add("tutorial-step", stepData.arrow, `step-${targetId}`);
+                const targetRect = target.getBoundingClientRect(), appRect = document.querySelector(".app-container").getBoundingClientRect();
+                textElement.textContent = stepData.text;
+                setTimeout(() => {
+                    let top, left;
+                    const stepHeight = stepElement.offsetHeight, stepWidth = stepElement.offsetWidth, offset = 20;
+                    switch (stepData.arrow) {
+                        case "tutorial-arrow-bottom": top = targetRect.top - stepHeight - offset; left = targetRect.left + targetRect.width / 2 - stepWidth / 2; break;
+                        case "tutorial-arrow-top": top = targetRect.bottom + offset; left = targetRect.left + targetRect.width / 2 - stepWidth / 2; break;
+                        case "tutorial-arrow-right": top = targetRect.top + targetRect.height / 2 - stepHeight / 2; left = targetRect.left - stepWidth - offset; break;
+                        case "tutorial-arrow-left": top = targetRect.top + targetRect.height / 2 - stepHeight / 2; left = targetRect.right + offset; break;
+                    }
+                    left = Math.max(appRect.left + 10, Math.min(left, appRect.right - stepWidth - 10));
+                    top = Math.max(appRect.top + 10, Math.min(top, appRect.bottom - stepHeight - 10));
+                    stepElement.style.top = `${top}px`;
+                    stepElement.style.left = `${left}px`;
+                }, 10);
+                backBtn.classList.toggle("hidden", index === 0);
+                nextBtn.classList.toggle("hidden", index >= steps.length - 1);
+                finishBtn.classList.toggle("hidden", index < steps.length - 1);
             }
-            left = Math.max(appRect.left + 10, Math.min(left, appRect.right - stepWidth - 10));
-            top = Math.max(appRect.top + 10, Math.min(top, appRect.bottom - stepHeight - 10));
-            stepElement.style.top = `${top}px`; stepElement.style.left = `${left}px`;
-        }, 10);
 
-        backBtn.classList.toggle('hidden', index === 0); // Hide back button on first step
-        nextBtn.classList.toggle('hidden', index >= steps.length - 1);
-        finishBtn.classList.toggle('hidden', index < steps.length - 1);
-    }
+            function finishTutorial() {
+                overlay.style.display = "none";
+                localStorage.setItem("flamezTutorialSeen", "true");
+            }
 
-    function finishTutorial(){ 
-        overlay.style.display='none';
-        localStorage.setItem('flamezTutorialSeen','true');
-        if (isAfterIntro && wasThemeMusicPlayedOnMenu && !sounds.theme.paused) { 
-            ui.musicContinueOverlay.style.display = 'flex'; 
+            backBtn.onclick = () => { if (currentStep > 0) showStep(--currentStep) };
+            nextBtn.onclick = () => { if (currentStep < steps.length - 1) showStep(++currentStep) };
+            finishBtn.onclick = finishTutorial;
+            overlay.style.display = "block";
+            setTimeout(() => showStep(currentStep), 50);
+        
         }
-    }
-    
-    backBtn.onclick = () => { if (currentStep > 0) showStep(--currentStep); }; // Make back button work
-    nextBtn.onclick = () => { if (currentStep < steps.length - 1) showStep(++currentStep); };
-    finishBtn.onclick = finishTutorial;
-    overlay.style.display = 'block';
-    setTimeout(() => showStep(currentStep), 50);
-}
-        }
-    </script>
+   </script>
 </body>
 </html>
