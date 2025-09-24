@@ -844,12 +844,21 @@ header {
                 lyrics.forEach(lyricBlock => {
                     const cleanBlock = lyricBlock.replace(/^[A-Za-z\s]+:/, "");
                     const normalizedBlock = cleanBlock.replace(/\n/g, '/');
-                    const bars = normalizedBlock.split('/').map(bar => bar.trim());
+                    
+                    // 1. Split into bars, trim whitespace, and REMOVE any empty bars from trailing slashes.
+                    const bars = normalizedBlock.split('/').map(bar => bar.trim()).filter(Boolean);
+
                     for (let i = 0; i < bars.length - 1; i += 2) {
-                        const bar1 = bars[i]; const bar2 = bars[i+1];
-                        // --- FIX: This new line adds a strict rhyme check to ensure every single pair rhymes ---
-                        if (bar1.length > 10 && bar2.length > 10 && doWordsRhyme(bar1.split(' ').pop(), bar2.split(' ').pop())) { 
-                            pairs.push([bar1, bar2]); 
+                        const bar1 = bars[i];
+                        const bar2 = bars[i+1];
+
+                        // 2. Robustly get the very last word of each bar to ensure an accurate check.
+                        const lastWord1 = bar1.split(/\s+/).pop();
+                        const lastWord2 = bar2.split(/\s+/).pop();
+
+                        // 3. The gatekeeper: Only add the pair if it passes all checks, including the rhyme check.
+                        if (bar1.length > 10 && bar2.length > 10 && doWordsRhyme(lastWord1, lastWord2)) {
+                            pairs.push([bar1, bar2]);
                         }
                     }
                 });
@@ -957,7 +966,7 @@ header {
             function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
             function formatLine(line) {
                  let formatted = line;
-                const replacements = [{ regex: /\byou's're|\byous're\b/gi, replacement: "you are" }, { regex: /\byou's|\byous\b/gi, replacement: "you" }, { regex: /\bI's'm\b/gi, replacement: "I am" }, { regex: /\bI's\b/gi, replacement: "I" }, { regex: /\bwe's're\b/gi, replacement: "we are" }, { regex: /\bwe's\b/gi, replacement: "we" }, { regex: /\b'cause|\bcause\b/gi, replacement: "because" }, { regex: /\b'bout to\b/gi, replacement: "about to" }, { regex: /\bfinna\b/gi, replacement: "about to" }, { regex: /\bgon'\b/gi, replacement: "going to" }, { regex: /\bwanna\b/gi, replacement: "want to" }, { regex: /\bgotta\b/gi, replacement: "have to" }, { regex: /\bya\b/gi, replacement: "you" }, { regex: /\bem\b/gi, replacement: "them" }, { regex: /\bgettin'\b/gi, replacement: "getting" }];
+                const replacements = [{ regex: /\byou's're|\byous're\b/gi, replacement: "you are" }, { regex: /\byou's|\byous\b/gi, replacement: "you" }, { regex: /\bI's'm\b/gi, replacement: "I am" }, { regex: /\bI's\b/gi, replacement: "I" }, { regex: /\bwe's're\b/gi, replacement: "we are" }, { regex: /\bwe's\b/gi, replacement: "we" }, { regex: /\b'cause\b/gi, replacement: "because" }, { regex: /\b'bout to\b/gi, replacement: "about to" }, { regex: /\bfinna\b/gi, replacement: "about to" }, { regex: /\bgon'\b/gi, replacement: "going to" }, { regex: /\bwanna\b/gi, replacement: "want to" }, { regex: /\bgotta\b/gi, replacement: "have to" }, { regex: /\bya\b/gi, replacement: "you" }, { regex: /\bem\b/gi, replacement: "them" }, { regex: /\bgettin'\b/gi, replacement: "getting" }];
                 const nameReplacements = [{ regex: /\b(Jack|Pat|DNA|K)\b/gi, replacements: ['Flamez AI', 'you', 'your whole crew', 'boy', 'clown', 'son'] }];
                 // <<< THIS IS THE EXPANDED VARIATIONS ARRAY >>>
                 const variations = [
